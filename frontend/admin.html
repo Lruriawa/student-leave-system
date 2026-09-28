@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<title>后台管理 · 学生请假系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --primary:#4f46e5; --primary-hover:#4338ca;
+    --bg:#0f172a; --card:#1e293b; --card-hover:#293548;
+    --border:#334155; --border-light:#475569;
+    --text:#f1f5f9; --text-muted:#94a3b8; --text-dim:#64748b;
+    --green:#22c55e; --red:#ef4444; --yellow:#f59e0b;
+  }
+  html { scroll-behavior:smooth; }
+  body {
+    background:var(--bg); color:var(--text);
+    font-family:'Inter',system-ui,-apple-system,sans-serif;
+    line-height:1.5; min-height:100vh;
+    background-image:radial-gradient(circle at 10% 0%, rgba(79,70,229,.12) 0%, transparent 40%), radial-gradient(circle at 90% 0%, rgba(139,92,246,.08) 0%, transparent 40%);
+    background-attachment:fixed; overflow-x:hidden;
+  }
+
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes modalIn { from { opacity:0; transform:scale(.95); } to { opacity:1; transform:scale(1); } }
+  @keyframes pop { 0% { transform:scale(.9); opacity:0; } 50% { transform:scale(1.03); } 100% { transform:scale(1); opacity:1; } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes slideDown { from { opacity:0; max-height:0; transform:translateY(-5px); } to { opacity:1; max-height:600px; transform:translateY(0); } }
+  @keyframes slideInRight { from { opacity:0; transform:translateX(20px); } to { opacity:1; transform:translateX(0); } }
+  @keyframes pulseGlow { 0%, 100% { box-shadow:0 0 0 0 rgba(245,158,11,.5); } 50% { box-shadow:0 0 0 8px rgba(245,158,11,0); } }
+  @keyframes rotateOnce { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+
+  /* ========== 登录 ========== */
+  .login-screen {
+    position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+    background:var(--bg); z-index:5000; padding:1rem;
+    background-image:radial-gradient(circle at 50% 0%, rgba(79,70,229,.15) 0%, transparent 60%);
+    transition:opacity .3s;
+  }
+  .login-screen.hidden { display:none; }
+  .login-box {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; padding:2.5rem 2.2rem;
+    max-width:400px; width:100%;
+    box-shadow:0 30px 60px rgba(0,0,0,.4);
+    animation:modalIn .4s cubic-bezier(.22,1,.36,1);
+  }
+  .login-logo {
+    width:64px; height:64px; border-radius:18px;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-size:1.6rem; margin:0 auto 1.2rem;
+    box-shadow:0 10px 24px rgba(79,70,229,.35);
+    animation:pop .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  .login-box h2 { font-size:1.3rem; text-align:center; margin-bottom:.4rem; }
+  .login-box p { font-size:.85rem; color:var(--text-muted); text-align:center; margin-bottom:2rem; }
+  .login-box .form-group { margin-bottom:1.2rem; }
+  .login-box label { color:var(--text-muted); font-size:.8rem; display:block; margin-bottom:.5rem; font-weight:500; }
+
+  .login-box .custom-input {
+    background:#0f172a; border-color:var(--border);
+    color:var(--text); padding-left:2.6rem;
+    font-size:.95rem; letter-spacing:.05em; min-height:46px;
+  }
+  .login-box .custom-input:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(79,70,229,.15), 0 2px 10px rgba(79,70,229,.15);
+  }
+  .login-box .custom-input-wrap.has-icon .input-icon {
+    left:1rem; font-size:.95rem; color:var(--text-dim);
+  }
+  .login-box .custom-input-wrap.has-icon:focus-within .input-icon { color:var(--primary); }
+
+  .login-box button {
+    width:100%; padding:.9rem; border-radius:12px;
+    background:var(--primary); color:white; border:none;
+    font-family:inherit; font-size:.95rem; font-weight:600;
+    cursor:pointer; transition:all .2s cubic-bezier(.22,1,.36,1);
+    display:flex; align-items:center; justify-content:center; gap:.5rem;
+  }
+  .login-box button:hover:not(:disabled) { background:var(--primary-hover); transform:translateY(-2px); box-shadow:0 8px 20px rgba(79,70,229,.4); }
+  .login-box button:disabled { background:#475569; cursor:not-allowed; }
+  .login-hint { text-align:center; font-size:.75rem; color:var(--text-dim); margin-top:1.5rem; padding-top:1.2rem; border-top:1px solid var(--border); }
+  .login-hint code { background:#0f172a; padding:.15rem .5rem; border-radius:6px; color:#a5b4fc; font-size:.75rem; }
+
+  .admin-app.hidden { display:none; }
+
+  /* ========== 顶部 ========== */
+  .admin-header {
+    background:rgba(30,41,59,.85); -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--border);
+    padding:1rem 2rem;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1rem; flex-wrap:wrap;
+    position:sticky; top:0; z-index:100;
+    animation:fadeIn .4s;
+  }
+  .brand { display:flex; align-items:center; gap:.8rem; }
+  .brand-logo {
+    width:40px; height:40px; border-radius:12px;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-size:1.1rem;
+    box-shadow:0 6px 16px rgba(79,70,229,.3);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .brand-logo:hover { transform:rotate(-8deg) scale(1.08); }
+  .brand-text h1 { font-size:1.05rem; font-weight:700; color:var(--text); line-height:1.2; }
+  .brand-text p { font-size:.72rem; color:var(--text-muted); }
+
+  .main-tabs {
+    display:inline-flex; background:rgba(15,23,42,.6);
+    border-radius:40px; padding:4px; gap:2px;
+    border:1px solid var(--border);
+  }
+  .main-tab {
+    padding:.5rem 1.1rem; border-radius:30px;
+    font-size:.82rem; font-weight:500; cursor:pointer;
+    color:var(--text-muted); border:none; background:transparent;
+    font-family:inherit;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+    display:inline-flex; align-items:center; gap:.5rem;
+  }
+  .main-tab:hover { color:var(--text); }
+  .main-tab.active {
+    background:var(--primary); color:white;
+    box-shadow:0 4px 12px rgba(79,70,229,.3);
+    transform:scale(1.02);
+  }
+  .main-tab .tab-count {
+    background:rgba(255,255,255,.15); color:white;
+    font-size:.72rem; padding:.05rem .5rem; border-radius:20px; font-weight:600;
+    min-width:1.4rem; text-align:center;
+    transition:all .25s;
+  }
+  .main-tab.active .tab-count { background:rgba(255,255,255,.25); }
+  .main-tab .tab-count.alert {
+    background:var(--yellow); color:#0f172a;
+    animation:pulseGlow 2s infinite;
+  }
+
+  .nav-btn {
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:.5rem 1rem; border-radius:40px;
+    background:transparent; border:1px solid var(--border);
+    color:#cbd5e1; font-family:inherit; font-size:.82rem; font-weight:500;
+    cursor:pointer; text-decoration:none;
+    transition:all .2s cubic-bezier(.22,1,.36,1);
+  }
+  .nav-btn:hover { background:var(--card-hover); color:var(--text); border-color:var(--border-light); transform:translateY(-2px); }
+  .nav-btn.primary { background:var(--primary); border-color:var(--primary); color:white; }
+  .nav-btn.primary:hover { background:var(--primary-hover); border-color:var(--primary-hover); box-shadow:0 6px 16px rgba(79,70,229,.35); }
+  .nav-btn.danger { color:#fca5a5; border-color:#7f1d1d; }
+  .nav-btn.danger:hover { background:#7f1d1d; color:white; }
+  .nav-btn:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+  .nav-btn i { transition:transform .2s; }
+  .nav-btn:hover i.fa-arrow-left { transform:translateX(-3px); }
+  .nav-btn:hover i.fa-sync-alt { transform:rotate(180deg); }
+
+  .admin-main { max-width:1440px; margin:0 auto; padding:2rem; }
+
+  /* ========== 统计 ========== */
+  .stats-grid {
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:1.2rem; margin-bottom:2rem;
+  }
+  .stat-card {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; padding:1.4rem;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+    position:relative; overflow:hidden;
+    animation:fadeInUp .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .stat-card:nth-child(1) { animation-delay:.03s; }
+  .stat-card:nth-child(2) { animation-delay:.06s; }
+  .stat-card:nth-child(3) { animation-delay:.09s; }
+  .stat-card:nth-child(4) { animation-delay:.12s; }
+  .stat-card:nth-child(5) { animation-delay:.15s; }
+  .stat-card:nth-child(6) { animation-delay:.18s; }
+  .stat-card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:3px;
+    background:linear-gradient(90deg, var(--primary), #8b5cf6);
+    opacity:0; transition:opacity .25s;
+  }
+  .stat-card:hover { border-color:var(--border-light); transform:translateY(-3px); box-shadow:0 12px 30px rgba(0,0,0,.2); }
+  .stat-card:hover::before { opacity:1; }
+  .stat-card.alert::before { background:linear-gradient(90deg, var(--yellow), #f97316); opacity:1; }
+  .stat-card.alert .stat-label i { color:var(--yellow); }
+  .stat-card.alert .stat-value { color:var(--yellow); }
+  .stat-card.boarding::before { background:linear-gradient(90deg, #3b82f6, #06b6d4); opacity:1; }
+  .stat-card.boarding .stat-label i { color:#3b82f6; }
+  .stat-card.boarding .stat-value { color:#60a5fa; }
+  .stat-card.day::before { background:linear-gradient(90deg, #f59e0b, #fbbf24); opacity:1; }
+  .stat-card.day .stat-label i { color:#f59e0b; }
+  .stat-card.day .stat-value { color:#fbbf24; }
+  .stat-label { font-size:.72rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em; display:flex; align-items:center; gap:.5rem; margin-bottom:.9rem; }
+  .stat-label i { color:var(--primary); font-size:.85rem; }
+  .stat-value { font-size:2rem; font-weight:700; color:var(--text); line-height:1; letter-spacing:-.02em; transition:color .3s; }
+  .stat-sub { font-size:.75rem; color:var(--text-dim); margin-top:.5rem; }
+
+  .admin-grid { display:grid; grid-template-columns:1.6fr 1fr; gap:1.5rem; align-items:start; }
+  @media (max-width:1100px) { .admin-grid { grid-template-columns:1fr; } }
+
+  /* ========== Panel ========== */
+  .panel {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:16px; overflow:hidden;
+    animation:fadeInUp .5s cubic-bezier(.22,1,.36,1) both;
+    transition:box-shadow .3s;
+  }
+  .panel:hover { box-shadow:0 8px 24px rgba(0,0,0,.15); }
+  .panel-header {
+    padding:1.1rem 1.4rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1rem; flex-wrap:wrap;
+  }
+  .panel-title { font-size:1rem; font-weight:600; display:flex; align-items:center; gap:.6rem; color:var(--text); }
+  .panel-title i { color:var(--primary); transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .panel:hover .panel-title i { transform:rotate(8deg) scale(1.1); }
+  .panel-body { padding:1.3rem 1.4rem; }
+  .panel-body.no-pad { padding:0; }
+
+  /* ========== 表格 ========== */
+  .table-wrap { overflow-x:auto; max-height:640px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .admin-table { width:100%; border-collapse:collapse; font-size:.88rem; }
+  .admin-table thead th {
+    position:sticky; top:0; z-index:2;
+    text-align:left; padding:.8rem 1rem;
+    background:#0f172a; font-weight:600; color:var(--text-muted);
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;
+    border-bottom:1px solid var(--border); white-space:nowrap;
+  }
+  .admin-table tbody td {
+    padding:.85rem 1rem; border-bottom:1px solid rgba(51,65,85,.4);
+    color:#cbd5e1; vertical-align:middle;
+  }
+  .admin-table tbody tr:last-child td { border-bottom:none; }
+  .admin-table tbody tr {
+    transition:background .15s;
+    animation:fadeIn .3s both;
+  }
+  .admin-table tbody tr:hover { background:rgba(15,23,42,.5); }
+
+  .name-cell { display:flex; align-items:center; gap:.6rem; font-weight:500; color:var(--text); }
+  .avatar {
+    width:30px; height:30px; border-radius:50%;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.78rem; font-weight:600; color:white; flex-shrink:0;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  tr:hover .avatar { transform:scale(1.1); }
+
+  .badge { display:inline-block; padding:.2rem .65rem; border-radius:30px; font-size:.72rem; font-weight:600; white-space:nowrap; }
+  .badge-count { background:rgba(79,70,229,.2); color:#a5b4fc; }
+  .badge-class { background:var(--border); color:#cbd5e1; }
+  .badge-green { background:rgba(34,197,94,.15); color:#86efac; }
+  .badge-yellow { background:rgba(245,158,11,.15); color:#fcd34d; }
+  .badge-red { background:rgba(239,68,68,.15); color:#fca5a5; }
+  .badge-pending { background:rgba(245,158,11,.15); color:#fcd34d; }
+  .badge-approved { background:rgba(34,197,94,.15); color:#86efac; }
+  .badge-rejected { background:rgba(239,68,68,.15); color:#fca5a5; }
+  .badge-boarding { background:rgba(59,130,246,.2); color:#93c5fd; }
+  .badge-boarding i { margin-right:.2rem; }
+  .badge-day { background:rgba(245,158,11,.2); color:#fcd34d; }
+  .badge-day i { margin-right:.2rem; }
+
+  /* ========== 按钮 ========== */
+  .btn {
+    display:inline-flex; align-items:center; gap:.4rem;
+    padding:.45rem .9rem; border-radius:30px;
+    border:none; font-family:inherit; font-size:.78rem; font-weight:500;
+    cursor:pointer; text-decoration:none;
+    transition:all .2s cubic-bezier(.22,1,.36,1);
+    white-space:nowrap;
+    position:relative; overflow:hidden;
+  }
+  .btn:hover { transform:translateY(-1px); }
+  .btn:active { transform:translateY(0); }
+  .btn-primary { background:var(--primary); color:white; }
+  .btn-primary:hover { background:var(--primary-hover); box-shadow:0 6px 16px rgba(79,70,229,.35); }
+  .btn-primary:disabled { background:var(--border); cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-ghost { background:transparent; color:#cbd5e1; border:1px solid var(--border); }
+  .btn-ghost:hover { background:var(--card-hover); border-color:var(--border-light); color:var(--text); }
+  .btn-success { background:var(--green); color:white; }
+  .btn-success:hover { background:#16a34a; box-shadow:0 6px 16px rgba(34,197,94,.35); }
+  .btn-danger { background:transparent; color:#fca5a5; border:1px solid rgba(239,68,68,.3); }
+  .btn-danger:hover { background:rgba(239,68,68,.15); border-color:var(--red); color:#fecaca; }
+  .btn-danger-solid { background:var(--red); color:white; }
+  .btn-danger-solid:hover { background:#dc2626; box-shadow:0 6px 16px rgba(239,68,68,.35); }
+  .btn-xs { padding:.3rem .6rem; font-size:.72rem; }
+  .btn-icon { width:30px; height:30px; padding:0; border-radius:8px; justify-content:center; }
+  .btn-icon:hover { transform:scale(1.1); }
+
+  /* ========== 自定义输入框 ========== */
+  .custom-input-wrap { position:relative; width:100%; }
+  .custom-input {
+    width:100%; padding:.65rem .9rem;
+    background:#0f172a; border:1.5px solid var(--border);
+    border-radius:10px; color:var(--text);
+    font-family:inherit; font-size:.88rem; line-height:1.5;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+    -webkit-appearance:none; appearance:none; outline:none;
+    min-height:42px;
+  }
+  .custom-input::placeholder { color:var(--text-dim); opacity:.7; transition:opacity .2s; }
+  .custom-input:hover:not(:focus):not(:disabled) {
+    border-color:var(--border-light);
+    box-shadow:0 2px 8px rgba(0,0,0,.2);
+  }
+  .custom-input:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(79,70,229,.2), 0 2px 10px rgba(79,70,229,.15);
+    transform:translateY(-1px);
+  }
+  .custom-input:focus::placeholder { opacity:.5; }
+  .custom-input:disabled { background:#1e293b; color:var(--text-dim); cursor:not-allowed; }
+
+  .custom-input-wrap.has-icon .custom-input { padding-left:2.6rem; }
+  .custom-input-wrap.has-icon .input-icon {
+    position:absolute; left:1rem; top:50%;
+    transform:translateY(-50%);
+    color:var(--text-dim); font-size:.88rem;
+    pointer-events:none; transition:color .2s;
+  }
+  .custom-input-wrap.has-icon:focus-within .input-icon { color:var(--primary); }
+
+  .custom-input[type="date"] { position:relative; padding-right:2.6rem; cursor:pointer; }
+  .custom-input[type="date"]::-webkit-calendar-picker-indicator {
+    opacity:0; position:absolute; inset:0;
+    width:100%; height:100%; cursor:pointer;
+  }
+  .custom-input-wrap.has-date-icon .input-icon.date-icon {
+    left:auto; right:1rem; pointer-events:none;
+  }
+  .custom-input[type="password"] { letter-spacing:.08em; }
+
+  .custom-input:-webkit-autofill,
+  .custom-input:-webkit-autofill:hover,
+  .custom-input:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--text);
+    -webkit-box-shadow: 0 0 0 1000px #0f172a inset;
+    transition: background-color 5000s ease-in-out 0s;
+    caret-color: var(--text);
+  }
+
+  /* ========== 自定义下拉 ========== */
+  .custom-select { position:relative; width:100%; user-select:none; outline:none; font-family:inherit; }
+  .custom-select-trigger {
+    width:100%; padding:.6rem 2.2rem .6rem .9rem;
+    border:1.5px solid var(--border); border-radius:10px;
+    background:#0f172a; color:var(--text); font-size:.88rem;
+    cursor:pointer; transition:all .2s cubic-bezier(.22,1,.36,1);
+    position:relative; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    min-height:42px; display:flex; align-items:center;
+  }
+  .custom-select-trigger::after {
+    content:''; position:absolute; right:.9rem; top:50%;
+    width:8px; height:8px;
+    border-right:2px solid var(--text-muted); border-bottom:2px solid var(--text-muted);
+    transform:translateY(-70%) rotate(45deg);
+    transition:transform .25s cubic-bezier(.22,1,.36,1);
+    pointer-events:none;
+  }
+  .custom-select.open .custom-select-trigger {
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(79,70,229,.2), 0 2px 10px rgba(79,70,229,.15);
+    transform:translateY(-1px);
+  }
+  .custom-select.open .custom-select-trigger::after {
+    transform:translateY(-30%) rotate(225deg); border-color:var(--primary);
+  }
+  .custom-select-trigger.placeholder { color:var(--text-dim); }
+  .custom-select-panel {
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:var(--card); border:1px solid var(--border); border-radius:10px;
+    box-shadow:0 12px 32px rgba(0,0,0,.5);
+    z-index:100; max-height:240px; overflow-y:auto;
+    opacity:0; transform:translateY(-6px) scale(.98);
+    pointer-events:none;
+    transition:opacity .2s, transform .25s cubic-bezier(.22,1,.36,1);
+    padding:4px; -webkit-overflow-scrolling:touch;
+  }
+  .custom-select.open .custom-select-panel {
+    opacity:1; transform:translateY(0) scale(1); pointer-events:auto;
+  }
+  .custom-select-option {
+    padding:.55rem .8rem; border-radius:8px;
+    font-size:.85rem; color:#cbd5e1; cursor:pointer;
+    transition:background .15s; display:flex; align-items:center; gap:.5rem;
+  }
+  .custom-select-option:hover,
+  .custom-select-option.highlight { background:rgba(79,70,229,.2); color:#a5b4fc; }
+  .custom-select-option.selected {
+    background:rgba(79,70,229,.25); color:#a5b4fc; font-weight:600;
+  }
+  .custom-select-option.selected::before {
+    content:'\f00c'; font-family:'Font Awesome 6 Free'; font-weight:900;
+    font-size:.7rem; margin-right:.2rem;
+  }
+  .custom-select-option.disabled { opacity:.4; cursor:not-allowed; pointer-events:none; }
+
+  /* ========== 表单 ========== */
+  .form-group { margin-bottom:.9rem; }
+  .form-group label { display:block; font-size:.78rem; color:var(--text-muted); margin-bottom:.35rem; font-weight:500; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:.6rem; }
+
+  /* ========== 搜索框 ========== */
+  .search-box { position:relative; display:inline-flex; align-items:center; }
+  .search-box i { position:absolute; left:.8rem; color:var(--text-dim); font-size:.82rem; pointer-events:none; }
+  .search-box input {
+    padding:.5rem 1rem .5rem 2.2rem;
+    background:#0f172a; border:1.5px solid var(--border);
+    border-radius:40px; color:var(--text);
+    font-family:inherit; font-size:.82rem; width:200px;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+    -webkit-appearance:none; appearance:none; outline:none;
+  }
+  .search-box input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(79,70,229,.2); width:240px; }
+  .search-box input::placeholder { color:var(--text-dim); }
+
+  /* ========== 空状态 ========== */
+  .empty { text-align:center; padding:3rem 1rem; color:var(--text-dim); font-size:.88rem; animation:fadeIn .3s; }
+  .empty i { font-size:2.5rem; margin-bottom:.8rem; color:var(--border); display:block; }
+
+  /* ========== 复选框 ========== */
+  .checkbox { width:16px; height:16px; accent-color:var(--primary); cursor:pointer; transition:transform .15s; }
+  .checkbox:hover { transform:scale(1.15); }
+
+  /* ========== 批量栏 ========== */
+  .bulk-bar {
+    display:none; align-items:center; gap:1rem;
+    padding:.8rem 1.4rem;
+    background:linear-gradient(90deg, rgba(79,70,229,.15), rgba(139,92,246,.1));
+    border-bottom:1px solid var(--border);
+    font-size:.85rem; color:var(--text);
+    animation:slideDown .3s cubic-bezier(.22,1,.36,1);
+  }
+  .bulk-bar.show { display:flex; flex-wrap:wrap; }
+  .bulk-bar .spacer { flex:1; }
+
+  /* ========== Modal ========== */
+  .modal-backdrop {
+    position:fixed; inset:0; background:rgba(0,0,0,.7);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:1rem;
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px);
+    opacity:0; transition:opacity .25s;
+  }
+  .modal-backdrop.show { display:flex; opacity:1; }
+  .modal {
+    background:var(--card); border:1px solid var(--border);
+    border-radius:20px; max-width:600px; width:100%;
+    max-height:90vh; overflow-y:auto;
+    box-shadow:0 30px 60px rgba(0,0,0,.5);
+    transform:scale(.95) translateY(10px);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .modal-backdrop.show .modal { transform:scale(1) translateY(0); }
+  .modal-header {
+    padding:1.3rem 1.6rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    position:sticky; top:0; background:var(--card); z-index:1;
+  }
+  .modal-title { font-size:1.05rem; font-weight:600; display:flex; align-items:center; gap:.6rem; }
+  .modal-title i { color:var(--primary); }
+  .modal-body { padding:1.4rem 1.6rem; }
+  .modal-footer {
+    padding:1.1rem 1.6rem; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:.6rem;
+    position:sticky; bottom:0; background:var(--card);
+  }
+  .close-btn {
+    background:transparent; border:none; font-size:1.1rem;
+    color:var(--text-muted); cursor:pointer;
+    width:32px; height:32px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+  }
+  .close-btn:hover { background:var(--card-hover); color:var(--text); transform:rotate(90deg); }
+
+  /* ========== 时间线 ========== */
+  .timeline { position:relative; }
+  .history-item {
+    display:flex; align-items:flex-start; gap:.9rem;
+    padding:1rem 0;
+    border-bottom:1px solid rgba(51,65,85,.4);
+    position:relative;
+    animation:fadeInUp .3s both;
+  }
+  .history-item:nth-child(1) { animation-delay:.03s; }
+  .history-item:nth-child(2) { animation-delay:.06s; }
+  .history-item:nth-child(3) { animation-delay:.09s; }
+  .history-item:nth-child(4) { animation-delay:.12s; }
+  .history-item:nth-child(5) { animation-delay:.15s; }
+  .history-item:last-child { border-bottom:none; }
+  .history-dot {
+    width:36px; height:36px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:.85rem; flex-shrink:0;
+    transition:transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .history-item:hover .history-dot { transform:scale(1.1); }
+  .history-dot.new { background:rgba(79,70,229,.2); color:#a5b4fc; }
+  .history-dot.extend { background:rgba(245,158,11,.15); color:#fcd34d; }
+  .history-content { flex:1; min-width:0; }
+  .history-head { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+  .history-date { font-weight:600; font-size:.9rem; color:var(--text); }
+  .history-reason { font-size:.85rem; color:var(--text-muted); word-break:break-word; }
+  .history-actions { display:flex; gap:.3rem; margin-left:auto; flex-wrap:wrap; }
+
+  .history-edit-form {
+    background:rgba(15,23,42,.5); border-radius:12px;
+    padding:1rem; margin-top:.6rem;
+    border:1px solid var(--border);
+    animation:slideDown .3s cubic-bezier(.22,1,.36,1);
+  }
+  .history-edit-form .form-row { grid-template-columns:1fr 1fr 1.5fr; gap:.5rem; }
+  .history-edit-form .custom-input,
+  .history-edit-form .custom-select-trigger { font-size:.82rem; min-height:38px; }
+
+  .add-history-form {
+    background:rgba(79,70,229,.08);
+    border:1px dashed rgba(79,70,229,.3);
+    border-radius:12px; padding:1rem; margin-bottom:1rem;
+  }
+  .add-history-form .form-row { grid-template-columns:1fr 1fr 1.5fr; gap:.5rem; margin-bottom:.6rem; }
+  .add-history-form .custom-input,
+  .add-history-form .custom-select-trigger { font-size:.82rem; min-height:40px; }
+
+  /* ========== 待审核卡片 ========== */
+  .pending-list {
+    display:flex; flex-direction:column; gap:.7rem;
+    padding:1rem 1.4rem; max-height:600px; overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .pending-item {
+    background:rgba(15,23,42,.5); border:1px solid var(--border);
+    border-radius:12px; padding:1rem 1.1rem;
+    display:flex; align-items:center; gap:1rem;
+    transition:all .25s cubic-bezier(.22,1,.36,1);
+    animation:slideInRight .35s cubic-bezier(.22,1,.36,1) both;
+  }
+  .pending-item:hover {
+    border-color:var(--yellow);
+    background:rgba(245,158,11,.05);
+    transform:translateX(4px);
+  }
+  .pending-item .check-wrap { display:flex; align-items:center; }
+  .pending-info { flex:1; min-width:0; }
+  .pending-title { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+  .pending-title .name { font-weight:600; color:var(--text); font-size:.92rem; }
+  .pending-meta { font-size:.8rem; color:var(--text-muted); display:flex; gap:.8rem; flex-wrap:wrap; }
+  .pending-meta span { display:inline-flex; align-items:center; gap:.3rem; }
+  .pending-meta i { color:var(--primary); font-size:.75rem; }
+  .pending-reason { font-size:.82rem; color:var(--text-muted); margin-top:.3rem; word-break:break-word; }
+  .pending-actions { display:flex; gap:.4rem; flex-shrink:0; }
+
+  .bulk-review-bar {
+    display:none; align-items:center; gap:1rem;
+    padding:.8rem 1.4rem;
+    background:linear-gradient(90deg, rgba(245,158,11,.15), rgba(249,115,22,.1));
+    border-bottom:1px solid var(--border);
+    font-size:.85rem; color:var(--text); flex-wrap:wrap;
+    animation:slideDown .3s cubic-bezier(.22,1,.36,1);
+  }
+  .bulk-review-bar.show { display:flex; }
+  .bulk-review-bar .spacer { flex:1; }
+
+  /* ========== 学生类型快捷筛选栏 ========== */
+  .type-filter-bar {
+    display:flex; gap:.5rem; align-items:center; flex-wrap:wrap;
+  }
+  .type-filter-bar .type-filter-btn {
+    padding:.4rem .9rem;
+    border-radius:30px;
+    border:1.5px solid var(--border);
+    background:transparent;
+    color:var(--text-muted);
+    font-family:inherit;
+    font-size:.78rem;
+    font-weight:500;
+    cursor:pointer;
+    transition:all .2s cubic-bezier(.22,1,.36,1);
+    display:inline-flex;
+    align-items:center;
+    gap:.4rem;
+  }
+  .type-filter-bar .type-filter-btn:hover {
+    color:var(--text);
+    border-color:var(--border-light);
+    background:var(--card-hover);
+  }
+  .type-filter-bar .type-filter-btn.active {
+    background:var(--primary);
+    border-color:var(--primary);
+    color:white;
+    box-shadow:0 4px 12px rgba(79,70,229,.3);
+  }
+  .type-filter-bar .type-filter-btn.active.boarding {
+    background:linear-gradient(135deg, #3b82f6, #06b6d4);
+    border-color:transparent;
+    box-shadow:0 4px 12px rgba(59,130,246,.4);
+  }
+  .type-filter-bar .type-filter-btn.active.day {
+    background:linear-gradient(135deg, #f59e0b, #fbbf24);
+    border-color:transparent;
+    color:#0f172a;
+    box-shadow:0 4px 12px rgba(245,158,11,.4);
+  }
+  .type-filter-bar .type-filter-btn .count {
+    background:rgba(255,255,255,.2);
+    padding:.02rem .4rem;
+    border-radius:20px;
+    font-size:.7rem;
+    font-weight:600;
+  }
+  .type-filter-bar .type-filter-btn.active .count {
+    background:rgba(255,255,255,.25);
+  }
+
+  /* ========== Toast ========== */
+  .toast {
+    position:fixed; bottom:2rem; right:2rem;
+    background:var(--card); border:1px solid var(--border);
+    color:var(--text); padding:1rem 1.4rem;
+    border-radius:12px; font-size:.88rem; font-weight:500;
+    box-shadow:0 20px 40px rgba(0,0,0,.4);
+    z-index:9999; opacity:0;
+    transform:translateY(20px) scale(.95);
+    transition:all .3s cubic-bezier(.22,1,.36,1);
+    display:flex; align-items:center; gap:.6rem;
+    max-width:calc(100vw - 2rem); pointer-events:none;
+  }
+  .toast.show { opacity:1; transform:translateY(0) scale(1); }
+  .toast.success { border-left:4px solid var(--green); }
+  .toast.error { border-left:4px solid var(--red); }
+  .toast.success i { color:var(--green); animation:pop .3s; }
+  .toast.error i { color:var(--red); animation:pop .3s; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-track { background:var(--bg); }
+  ::-webkit-scrollbar-thumb { background:var(--border); border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover { background:var(--border-light); }
+
+  .info-list { font-size:.82rem; color:var(--text-muted); line-height:1.9; }
+  .info-list strong { color:#cbd5e1; font-weight:600; }
+  .info-list i { color:var(--primary); width:14px; margin-right:.5rem; }
+
+  /* ========== 移动端 ========== */
+  @media (max-width:900px) {
+    .admin-header { padding:1rem; gap:.7rem; }
+    .brand-text h1 { font-size:.95rem; }
+    .brand-text p { display:none; }
+    .admin-main { padding:1.2rem 1rem; }
+
+    .main-tabs { order:3; width:100%; }
+    .main-tab { flex:1; justify-content:center; padding:.55rem .6rem; font-size:.78rem; }
+    .main-tab .tab-count { font-size:.68rem; padding:.02rem .4rem; }
+
+    .stats-grid { grid-template-columns:repeat(2, 1fr); gap:.8rem; }
+    .stat-card { padding:1.1rem; }
+    .stat-label { font-size:.66rem; margin-bottom:.6rem; }
+    .stat-value { font-size:1.5rem; }
+    .stat-sub { font-size:.68rem; }
+
+    .admin-grid { gap:1.2rem; }
+    .panel-header { padding:.9rem 1.1rem; }
+    .panel-body { padding:1.1rem; }
+
+    .admin-table { font-size:.82rem; }
+    .admin-table thead th { padding:.65rem .7rem; font-size:.68rem; }
+    .admin-table tbody td { padding:.7rem .7rem; }
+
+    .name-cell { gap:.4rem; }
+    .avatar { width:26px; height:26px; font-size:.7rem; }
+
+    .btn-xs { padding:.28rem .5rem; font-size:.68rem; }
+    .btn-icon { width:28px; height:28px; }
+
+    .pending-item { padding:.8rem .9rem; gap:.7rem; }
+    .pending-actions { flex-direction:column; gap:.3rem; }
+
+    .modal { max-height:95vh; border-radius:16px; }
+    .modal-header { padding:1.1rem 1.2rem; }
+    .modal-body { padding:1.1rem 1.2rem; }
+    .modal-footer { padding:1rem 1.2rem; }
+
+    .add-history-form .form-row,
+    .history-edit-form .form-row { grid-template-columns:1fr 1fr; }
+    .add-history-form .form-row > *:nth-child(3),
+    .history-edit-form .form-row > *:nth-child(3) { grid-column:1 / -1; }
+
+    .toast { bottom:1rem; right:1rem; left:1rem; justify-content:center; }
+  }
+
+  @media (max-width:600px) {
+    .admin-header { padding:.8rem; }
+    .brand-logo { width:34px; height:34px; font-size:.9rem; border-radius:10px; }
+    .brand-text h1 { font-size:.85rem; }
+
+    .nav-btn { padding:.45rem .7rem; font-size:.75rem; }
+    .nav-btn span:not(.tab-count) { display:none; }
+    .nav-btn i { margin:0; }
+    .nav-btn.primary span { display:none; }
+    .nav-btn.primary i { margin:0; }
+
+    .admin-main { padding:1rem .7rem; }
+
+    .stats-grid { grid-template-columns:1fr 1fr; gap:.6rem; }
+    .stat-card { padding:.9rem; border-radius:12px; }
+    .stat-value { font-size:1.3rem; }
+    .stat-label { font-size:.6rem; margin-bottom:.5rem; gap:.3rem; }
+    .stat-sub { font-size:.62rem; }
+
+    .admin-table thead th:nth-child(3),
+    .admin-table tbody td:nth-child(3),
+    .admin-table thead th:nth-child(7),
+    .admin-table tbody td:nth-child(7) { display:none; }
+
+    .search-box input { width:140px; font-size:.78rem; }
+    .search-box input:focus { width:180px; }
+
+    .panel-header { padding:.8rem 1rem; }
+    .panel-title { font-size:.9rem; gap:.4rem; }
+    .panel-body { padding:.9rem; }
+
+    .pending-list { padding:.8rem; }
+    .pending-item { padding:.7rem .8rem; gap:.5rem; }
+    .pending-title .name { font-size:.85rem; }
+    .pending-meta { font-size:.72rem; gap:.5rem; }
+
+    .timeline { padding:0; }
+    .history-item { gap:.6rem; padding:.8rem 0; }
+    .history-dot { width:30px; height:30px; font-size:.75rem; }
+    .history-date { font-size:.82rem; }
+    .history-reason { font-size:.78rem; }
+
+    .form-row { grid-template-columns:1fr; gap:.5rem; }
+    .add-history-form .form-row,
+    .history-edit-form .form-row { grid-template-columns:1fr; }
+
+    .modal { border-radius:14px; }
+    .modal-title { font-size:.95rem; }
+
+    .login-box { padding:2rem 1.5rem; border-radius:16px; }
+    .login-logo { width:54px; height:54px; font-size:1.3rem; }
+    .login-box h2 { font-size:1.15rem; }
+  }
+
+  @media (max-width:380px) {
+    .stats-grid { grid-template-columns:1fr; }
+  }
+
+  .rotate-once { animation:rotateOnce .6s cubic-bezier(.22,1,.36,1); }
+</style>
+</head>
+<body>
+
+<!-- ========== 登录 ========== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo"><i class="fas fa-shield-alt"></i></div>
+    <h2>后台管理登录</h2>
+    <p>请输入管理员密码</p>
+    <form id="loginForm">
+      <div class="form-group">
+        <label for="loginPassword">密码</label>
+        <div class="custom-input-wrap has-icon">
+          <i class="fas fa-lock input-icon"></i>
+          <input type="password" id="loginPassword" class="custom-input" placeholder="请输入密码" autocomplete="current-password">
+        </div>
+      </div>
+      <button type="submit" id="loginBtn">
+        <i class="fas fa-sign-in-alt"></i> 登录
+      </button>
+    </form>
+    <div class="login-hint">默认密码：<code>admin123</code></div>
+  </div>
+</div>
+
+<!-- ========== 主应用 ========== -->
+<div class="admin-app hidden" id="adminApp">
+
+  <header class="admin-header">
+    <div class="brand">
+      <div class="brand-logo"><i class="fas fa-shield-alt"></i></div>
+      <div class="brand-text">
+        <h1>后台管理系统</h1>
+        <p>Admin Panel · 学生请假</p>
+      </div>
+    </div>
+    <div class="main-tabs">
+      <button class="main-tab active" data-tab="students">
+        <i class="fas fa-users-cog"></i> <span>学生管理</span>
+      </button>
+      <button class="main-tab" data-tab="review">
+        <i class="fas fa-clipboard-check"></i> <span>待审核</span>
+        <span class="tab-count" id="pendingTabCount">0</span>
+      </button>
+    </div>
+    <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+      <a href="index.html" class="nav-btn"><i class="fas fa-arrow-left"></i> <span>学生端</span></a>
+      <button class="nav-btn" id="refreshBtn" title="刷新数据"><i class="fas fa-sync-alt"></i> <span>刷新</span></button>
+      <button class="nav-btn primary" id="addStudentBtn"><i class="fas fa-user-plus"></i> <span>添加学生</span></button>
+      <button class="nav-btn danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> <span>退出</span></button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+
+    <!-- ===== Tab 1: 学生管理 ===== -->
+    <div id="studentsTab">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-users"></i> 学生总数</div>
+          <div class="stat-value" id="statTotalStudents">—</div>
+          <div class="stat-sub" id="statClassCount">共 0 个班级</div>
+        </div>
+        <div class="stat-card boarding">
+          <div class="stat-label"><i class="fas fa-bed"></i> 住宿生</div>
+          <div class="stat-value" id="statBoarding">—</div>
+          <div class="stat-sub">人 · 含住宿</div>
+        </div>
+        <div class="stat-card day">
+          <div class="stat-label"><i class="fas fa-home"></i> 走读生</div>
+          <div class="stat-value" id="statDay">—</div>
+          <div class="stat-sub">人 · 每日通勤</div>
+        </div>
+        <div class="stat-card alert">
+          <div class="stat-label"><i class="fas fa-clock"></i> 待审核</div>
+          <div class="stat-value" id="statPending">—</div>
+          <div class="stat-sub">点击「待审核」处理</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-calendar-check"></i> 已通过请假</div>
+          <div class="stat-value" id="statTotalLeaves">—</div>
+          <div class="stat-sub">所有学生合计</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-arrow-up-wide-short"></i> 请假最多</div>
+          <div class="stat-value" id="statTopStudent" style="font-size:1.3rem;">—</div>
+          <div class="stat-sub" id="statAvgLeaves">人均 0 次</div>
+        </div>
+      </div>
+
+      <div class="admin-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-title"><i class="fas fa-users-cog"></i> 学生管理</div>
+            <div style="display:flex; gap:.6rem; flex-wrap:wrap; align-items:center;">
+              <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="搜索学生...">
+              </div>
+              <div style="min-width:140px;">
+                <select id="classFilter" data-custom-select data-placeholder="全部班级">
+                  <option value="all">全部班级</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 学生类型筛选栏 -->
+          <div style="padding:.8rem 1.4rem; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap;">
+            <div class="type-filter-bar" id="typeFilterBar">
+              <button class="type-filter-btn active" data-type="all">
+                <i class="fas fa-users"></i> 全部
+                <span class="count" id="typeCountAll">0</span>
+              </button>
+              <button class="type-filter-btn boarding" data-type="boarding">
+                <i class="fas fa-bed"></i> 住宿
+                <span class="count" id="typeCountBoarding">0</span>
+              </button>
+              <button class="type-filter-btn day" data-type="day">
+                <i class="fas fa-home"></i> 走读
+                <span class="count" id="typeCountDay">0</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="bulk-bar" id="bulkBar">
+            <span>已选 <strong id="selectedCount">0</strong> 项</span>
+            <div class="spacer"></div>
+            <button class="btn btn-ghost btn-xs" id="bulkResetBtn"><i class="fas fa-undo-alt"></i> 重置请假</button>
+            <button class="btn btn-ghost btn-xs" id="bulkBoardingBtn"><i class="fas fa-bed"></i> 设为住宿</button>
+            <button class="btn btn-ghost btn-xs" id="bulkDayBtn"><i class="fas fa-home"></i> 设为走读</button>
+            <button class="btn btn-danger btn-xs" id="bulkDeleteBtn"><i class="fas fa-trash"></i> 删除</button>
+            <button class="btn btn-ghost btn-xs" id="clearSelectionBtn">取消</button>
+          </div>
+
+          <div class="panel-body no-pad">
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th style="width:40px;"><input type="checkbox" class="checkbox" id="selectAll"></th>
+                    <th>学生</th>
+                    <th>班级</th>
+                    <th>类型</th>
+                    <th>已通过</th>
+                    <th>待审核</th>
+                    <th>最近请假</th>
+                    <th style="text-align:right;">操作</th>
+                  </tr>
+                </thead>
+                <tbody id="studentsTbody">
+                  <tr><td colspan="8" class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:1.5rem;">
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-user-plus"></i> 快速添加学生</div>
+            </div>
+            <div class="panel-body">
+              <div class="form-group">
+                <label>学生姓名</label>
+                <div class="custom-input-wrap has-icon">
+                  <i class="fas fa-user input-icon"></i>
+                  <input type="text" class="custom-input" id="newStudentName" placeholder="请输入姓名" maxlength="20">
+                </div>
+              </div>
+              <div class="form-group">
+                <label>班级</label>
+                <div class="custom-input-wrap has-icon">
+                  <i class="fas fa-school input-icon"></i>
+                  <input type="text" class="custom-input" id="newStudentClass" placeholder="如：三年级1班" list="classList" maxlength="20">
+                  <datalist id="classList"></datalist>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>学生类型</label>
+                <select class="custom-select" id="newStudentType" data-custom-select data-placeholder="选择类型" style="display:none">
+                  <option value="day">🏠 走读生</option>
+                  <option value="boarding">🛏️ 住宿生</option>
+                </select>
+              </div>
+              <button class="btn btn-primary" id="quickAddBtn" style="width:100%; justify-content:center; padding:.7rem;">
+                <i class="fas fa-plus"></i> 添加学生
+              </button>
+            </div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-header">
+              <div class="panel-title"><i class="fas fa-info-circle"></i> 功能说明</div>
+            </div>
+            <div class="panel-body">
+              <div class="info-list">
+                <div><i class="fas fa-clipboard-check"></i><strong>审核</strong>：待审核 Tab 中通过/驳回</div>
+                <div><i class="fas fa-bed"></i><strong>住宿/走读</strong>：可在添加/编辑时切换，或批量操作</div>
+                <div><i class="fas fa-history"></i><strong>历史</strong>：点击学生行历史图标查看</div>
+                <div><i class="fas fa-edit"></i><strong>编辑历史</strong>：可改日期/类型/原因/状态</div>
+                <div><i class="fas fa-undo-alt"></i><strong>重置请假</strong>：清空该生全部记录</div>
+                <div><i class="fas fa-check-square"></i><strong>批量操作</strong>：勾选后可统一处理</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== Tab 2: 待审核 ===== -->
+    <div id="reviewTab" style="display:none;">
+      <div class="stats-grid">
+        <div class="stat-card alert">
+          <div class="stat-label"><i class="fas fa-clock"></i> 待审核总数</div>
+          <div class="stat-value" id="statPendingTotal">—</div>
+          <div class="stat-sub">需管理员处理</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-user-graduate"></i> 涉及学生</div>
+          <div class="stat-value" id="statPendingStudents">—</div>
+          <div class="stat-sub">人</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i class="fas fa-calendar-day"></i> 最近提交</div>
+          <div class="stat-value" id="statPendingLatest" style="font-size:1.2rem;">—</div>
+          <div class="stat-sub">日期</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-title"><i class="fas fa-clipboard-check"></i> 待审核请假记录</div>
+          <div style="display:flex; gap:.6rem; flex-wrap:wrap;">
+            <button class="btn btn-success btn-xs" id="approveAllBtn"><i class="fas fa-check-double"></i> 全部通过</button>
+            <button class="btn btn-danger-solid btn-xs" id="rejectAllBtn"><i class="fas fa-times-circle"></i> 全部驳回</button>
+            <button class="btn btn-ghost btn-xs" id="refreshPendingBtn"><i class="fas fa-sync-alt"></i> 刷新</button>
+          </div>
+        </div>
+
+        <div class="bulk-review-bar" id="bulkReviewBar">
+          <span>已选 <strong id="reviewSelectedCount">0</strong> 条</span>
+          <div class="spacer"></div>
+          <button class="btn btn-success btn-xs" id="bulkApproveBtn"><i class="fas fa-check"></i> 通过所选</button>
+          <button class="btn btn-danger-solid btn-xs" id="bulkRejectBtn"><i class="fas fa-times"></i> 驳回所选</button>
+          <button class="btn btn-ghost btn-xs" id="clearReviewSelectionBtn">取消选择</button>
+        </div>
+
+        <div class="pending-list" id="pendingList">
+          <div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- 历史记录编辑模态框 -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fas fa-history"></i>
+        <span id="historyTitle">请假历史</span>
+      </div>
+      <button class="close-btn" onclick="closeHistoryModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="add-history-form">
+        <div style="font-size:.82rem; color:var(--text-muted); margin-bottom:.6rem; font-weight:500;">
+          <i class="fas fa-plus-circle" style="color:var(--primary);"></i> 添加新记录
+        </div>
+        <div class="form-row">
+          <div class="custom-input-wrap has-date-icon">
+            <input type="date" class="custom-input" id="newHistoryDate">
+            <i class="fas fa-calendar-alt input-icon date-icon"></i>
+          </div>
+          <select class="custom-select" id="newHistoryType" data-custom-select data-placeholder="类型" style="display:none">
+            <option value="new">新请假</option>
+            <option value="extend">续假</option>
+          </select>
+          <div class="custom-input-wrap has-icon">
+            <i class="fas fa-comment-dots input-icon"></i>
+            <input type="text" class="custom-input" id="newHistoryReason" placeholder="原因（可选）" maxlength="50">
+          </div>
+        </div>
+        <div class="form-row" style="margin-top:.5rem; grid-template-columns:1fr;">
+          <select class="custom-select" id="newHistoryStatus" data-custom-select data-placeholder="状态" style="display:none">
+            <option value="approved">已通过（直接生效）</option>
+            <option value="pending">待审核</option>
+            <option value="rejected">已驳回</option>
+          </select>
+        </div>
+        <button class="btn btn-primary btn-xs" id="addHistoryBtn" style="width:100%; justify-content:center; margin-top:.5rem;">
+          <i class="fas fa-plus"></i> 添加记录
+        </button>
+      </div>
+      <div id="historyList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeHistoryModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- 编辑学生信息模态框 -->
+<div class="modal-backdrop" id="editStudentModal">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-user-edit"></i> 编辑学生信息</div>
+      <button class="close-btn" onclick="closeEditStudentModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>姓名</label>
+        <div class="custom-input-wrap has-icon">
+          <i class="fas fa-user input-icon"></i>
+          <input type="text" class="custom-input" id="editStudentName" maxlength="20">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>班级</label>
+        <div class="custom-input-wrap has-icon">
+          <i class="fas fa-school input-icon"></i>
+          <input type="text" class="custom-input" id="editStudentClass" maxlength="20">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>学生类型</label>
+        <select class="custom-select" id="editStudentType" data-custom-select data-placeholder="选择类型" style="display:none">
+          <option value="day">🏠 走读生</option>
+          <option value="boarding">🛏️ 住宿生</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeEditStudentModal()">取消</button>
+      <button class="btn btn-primary" id="saveStudentInfoBtn"><i class="fas fa-save"></i> 保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== 自定义下拉组件 ==========
+class CustomSelect {
+  constructor(nativeSelect, options = {}) {
+    this.native = nativeSelect;
+    this.placeholder = options.placeholder || '请选择';
+    this.isOpen = false;
+    this.native.style.display = 'none';
+    this.wrapper = document.createElement('div');
+    this.wrapper.className = 'custom-select';
+    this.wrapper.tabIndex = 0;
+    this.trigger = document.createElement('div');
+    this.trigger.className = 'custom-select-trigger';
+    this.wrapper.appendChild(this.trigger);
+    this.panel = document.createElement('div');
+    this.panel.className = 'custom-select-panel';
+    this.wrapper.appendChild(this.panel);
+    this.native.parentNode.insertBefore(this.wrapper, this.native);
+    this.bindEvents();
+    this.refresh();
+  }
+  refresh() {
+    const selectedOpt = this.native.options[this.native.selectedIndex];
+    if (selectedOpt && selectedOpt.value !== '') {
+      this.trigger.textContent = selectedOpt.textContent;
+      this.trigger.classList.remove('placeholder');
+    } else {
+      this.trigger.textContent = this.placeholder;
+      this.trigger.classList.add('placeholder');
+    }
+    this.panel.innerHTML = '';
+    Array.from(this.native.options).forEach((opt, idx) => {
+      if (opt.value === '' && opt.disabled) return;
+      const item = document.createElement('div');
+      item.className = 'custom-select-option';
+      if (opt.value === this.native.value) item.classList.add('selected');
+      if (opt.disabled) item.classList.add('disabled');
+      item.dataset.value = opt.value;
+      item.dataset.index = idx;
+      item.textContent = opt.textContent;
+      item.addEventListener('click', () => {
+        if (opt.disabled) return;
+        this.selectValue(opt.value);
+        this.close();
+      });
+      this.panel.appendChild(item);
+    });
+  }
+  selectValue(value) {
+    this.native.value = value;
+    this.native.dispatchEvent(new Event('change', { bubbles: true }));
+    this.refresh();
+  }
+  open() {
+    if (this.isOpen) return;
+    document.querySelectorAll('.custom-select.open').forEach(el => {
+      if (el !== this.wrapper) el._customSelect?.close();
+    });
+    this.isOpen = true;
+    this.wrapper.classList.add('open');
+    const selected = this.panel.querySelector('.custom-select-option.selected');
+    if (selected) selected.scrollIntoView({ block: 'nearest' });
+  }
+  close() {
+    this.isOpen = false;
+    this.wrapper.classList.remove('open');
+  }
+  highlightMove(dir) {
+    const items = Array.from(this.panel.querySelectorAll('.custom-select-option:not(.disabled)'));
+    if (!items.length) return;
+    let currentIdx = items.findIndex(i => i.classList.contains('highlight'));
+    let nextIdx = currentIdx + dir;
+    if (nextIdx < 0) nextIdx = items.length - 1;
+    if (nextIdx >= items.length) nextIdx = 0;
+    items.forEach(i => i.classList.remove('highlight'));
+    items[nextIdx].classList.add('highlight');
+    items[nextIdx].scrollIntoView({ block: 'nearest' });
+  }
+  bindEvents() {
+    this.trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.isOpen) this.close(); else this.open();
+    });
+    this.wrapper.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (this.isOpen) {
+          const hl = this.panel.querySelector('.custom-select-option.highlight');
+          if (hl) { this.selectValue(hl.dataset.value); this.close(); }
+        } else this.open();
+      } else if (e.key === 'Escape') this.close();
+      else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!this.isOpen) this.open(); else this.highlightMove(1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!this.isOpen) this.open(); else this.highlightMove(-1);
+      }
+    });
+    document.addEventListener('click', (e) => {
+      if (!this.wrapper.contains(e.target)) this.close();
+    });
+    this.native.addEventListener('change', () => this.refresh());
+  }
+}
+
+function initCustomSelects() {
+  document.querySelectorAll('select[data-custom-select]').forEach(sel => {
+    if (!sel._customSelect) {
+      sel._customSelect = new CustomSelect(sel, {
+        placeholder: sel.dataset.placeholder || '请选择'
+      });
+    }
+  });
+}
+
+// ========== 业务逻辑 ==========
+const API_BASE = '/api';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+
+let adminToken = localStorage.getItem('adminToken') || '';
+let allStudents = [];
+let selectedIds = new Set();
+let selectedReviewIds = new Set();
+let currentHistoryStudentId = null;
+let editingStudentId = null;
+let currentTab = 'students';
+let currentTypeFilter = 'all';
+let isLoading = false;
+
+function showToast(msg, type = 'success') {
+  const t = $('#toast');
+  t.className = 'toast ' + type;
+  t.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i><span>${msg}</span>`;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function apiRequest(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json', 'x-admin-token': adminToken },
+    ...options
+  });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { throw new Error(res.status === 404 ? `接口不存在 (${path})` : `服务器返回异常 (${res.status})`); }
+  if (res.status === 401) { handleLogout(); throw new Error(data.message || '登录已过期'); }
+  if (!res.ok || !data.success) throw new Error(data.message || `请求失败 (${res.status})`);
+  return data;
+}
+
+function showLogin() { $('#loginScreen').classList.remove('hidden'); $('#adminApp').classList.add('hidden'); }
+function showApp() { $('#loginScreen').classList.add('hidden'); $('#adminApp').classList.remove('hidden'); }
+function handleLogout() { adminToken = ''; localStorage.removeItem('adminToken'); showLogin(); }
+
+async function handleLogin(e) {
+  e.preventDefault();
+  const password = $('#loginPassword').value;
+  if (!password) return showToast('请输入密码', 'error');
+  const btn = $('#loginBtn');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+  try {
+    const res = await fetch(`${API_BASE}/admin/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.message || '登录失败');
+    adminToken = data.token;
+    localStorage.setItem('adminToken', adminToken);
+    showToast('登录成功');
+    showApp();
+    await initAppData();
+  } catch (err) { showToast(err.message, 'error'); }
+  finally { btn.disabled = false; btn.innerHTML = old; }
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  $$('.main-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  $('#studentsTab').style.display = tab === 'students' ? 'block' : 'none';
+  $('#reviewTab').style.display = tab === 'review' ? 'block' : 'none';
+  if (tab === 'review') loadPending();
+}
+
+function animateNumber(el, target) {
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) { el.textContent = target; return; }
+  const steps = 12;
+  const step = (target - current) / steps;
+  let i = 0;
+  const timer = setInterval(() => {
+    i++;
+    if (i >= steps) { el.textContent = target; clearInterval(timer); return; }
+    el.textContent = Math.round(current + step * i);
+  }, 25);
+}
+
+function typeLabel(type) { return type === 'boarding' ? '住宿' : '走读'; }
+function typeIcon(type) { return type === 'boarding' ? 'fa-bed' : 'fa-home'; }
+function typeBadgeClass(type) { return type === 'boarding' ? 'badge-boarding' : 'badge-day'; }
+
+async function loadStats() {
+  try {
+    const res = await apiRequest('/stats');
+    const s = res.data;
+    animateNumber($('#statTotalStudents'), s.totalStudents);
+    animateNumber($('#statTotalLeaves'), s.totalLeaves);
+    animateNumber($('#statPending'), s.pendingCount);
+    animateNumber($('#statBoarding'), s.boardingCount);
+    animateNumber($('#statDay'), s.dayCount);
+    $('#statTopStudent').textContent = s.topStudent;
+    $('#statAvgLeaves').textContent = `人均 ${s.avgLeaves} 次`;
+    const countEl = $('#pendingTabCount');
+    countEl.textContent = s.pendingCount;
+    countEl.classList.toggle('alert', s.pendingCount > 0);
+    const classesRes = await apiRequest('/classes');
+    $('#statClassCount').textContent = `共 ${classesRes.data.length} 个班级`;
+
+    // 更新类型筛选栏的数量
+    animateNumber($('#typeCountAll'), s.totalStudents);
+    animateNumber($('#typeCountBoarding'), s.boardingCount);
+    animateNumber($('#typeCountDay'), s.dayCount);
+  } catch (e) { console.error(e); }
+}
+
+async function loadPending() {
+  const list = $('#pendingList');
+  list.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>';
+  try {
+    const res = await apiRequest('/admin/pending');
+    const pending = res.data;
+    animateNumber($('#statPendingTotal'), pending.length);
+    const students = new Set(pending.map(p => p.studentId));
+    animateNumber($('#statPendingStudents'), students.size);
+    $('#statPendingLatest').textContent = pending.length > 0 ? pending[0].date : '—';
+
+    if (!pending.length) {
+      list.innerHTML = '<div class="empty"><i class="fas fa-check-circle" style="color:var(--green);"></i>暂无待审核记录，太棒了！</div>';
+      return;
+    }
+
+    let html = '';
+    pending.forEach((p, idx) => {
+      const key = `${p.studentId}|${p.historyId}`;
+      const checked = selectedReviewIds.has(key);
+      const initial = p.studentName.charAt(0);
+      const typeLabelText = p.type === 'extend' ? '续假' : '新请假';
+      const typeBadge = p.type === 'extend' ? 'badge-yellow' : 'badge-count';
+      const studentTypeBadge = p.studentType 
+        ? `<span class="badge ${typeBadgeClass(p.studentType)}"><i class="fas ${typeIcon(p.studentType)}"></i>${typeLabel(p.studentType)}</span>` 
+        : '';
+      html += `
+        <div class="pending-item" data-key="${key}" style="animation-delay:${Math.min(idx * 30, 400)}ms">
+          <div class="check-wrap">
+            <input type="checkbox" class="checkbox review-check" data-key="${key}" ${checked ? 'checked' : ''}>
+          </div>
+          <div class="avatar">${initial}</div>
+          <div class="pending-info">
+            <div class="pending-title">
+              <span class="name">${p.studentName}</span>
+              <span class="badge badge-class">${p.studentClass || '—'}</span>
+              ${studentTypeBadge}
+              <span class="badge ${typeBadge}">${typeLabelText}</span>
+            </div>
+            <div class="pending-meta">
+              <span><i class="fas fa-calendar"></i>${p.date}</span>
+              <span><i class="fas fa-comment"></i>${p.reason || '—'}</span>
+            </div>
+          </div>
+          <div class="pending-actions">
+            <button class="btn btn-success btn-xs approve-one" data-sid="${p.studentId}" data-hid="${p.historyId}">
+              <i class="fas fa-check"></i> 通过
+            </button>
+            <button class="btn btn-danger-solid btn-xs reject-one" data-sid="${p.studentId}" data-hid="${p.historyId}">
+              <i class="fas fa-times"></i> 驳回
+            </button>
+          </div>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+
+    $$('.review-check').forEach(cb => {
+      cb.addEventListener('change', () => {
+        const key = cb.dataset.key;
+        if (cb.checked) selectedReviewIds.add(key);
+        else selectedReviewIds.delete(key);
+        updateBulkReviewBar();
+      });
+    });
+
+    $$('.approve-one').forEach(btn => {
+      btn.addEventListener('click', () => reviewOne(btn.dataset.sid, btn.dataset.hid, 'approved'));
+    });
+    $$('.reject-one').forEach(btn => {
+      btn.addEventListener('click', () => reviewOne(btn.dataset.sid, btn.dataset.hid, 'rejected'));
+    });
+
+    updateBulkReviewBar();
+  } catch (e) {
+    list.innerHTML = `<div class="empty"><i class="fas fa-exclamation-triangle"></i>${e.message}</div>`;
+  }
+}
+
+function updateBulkReviewBar() {
+  const bar = $('#bulkReviewBar');
+  const count = selectedReviewIds.size;
+  animateNumber($('#reviewSelectedCount'), count);
+  bar.classList.toggle('show', count > 0);
+}
+
+async function reviewOne(studentId, historyId, status) {
+  try {
+    await apiRequest(`/students/${studentId}/history/${historyId}/review`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+    showToast(status === 'approved' ? '已通过' : '已驳回');
+    selectedReviewIds.delete(`${studentId}|${historyId}`);
+    await loadPending();
+    await loadStats();
+    await refreshAll(false);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function reviewAllPending(status) {
+  if (!confirm(`确定${status === 'approved' ? '通过' : '驳回'}所有待审核记录？`)) return;
+  try {
+    const res = await apiRequest('/admin/pending');
+    const pending = res.data;
+    for (const p of pending) {
+      await apiRequest(`/students/${p.studentId}/history/${p.historyId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ status })
+      });
+    }
+    showToast(`已${status === 'approved' ? '通过' : '驳回'} ${pending.length} 条`);
+    selectedReviewIds.clear();
+    await loadPending();
+    await loadStats();
+    await refreshAll(false);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function bulkReview(status) {
+  if (!selectedReviewIds.size) return;
+  if (!confirm(`确定${status === 'approved' ? '通过' : '驳回'}所选 ${selectedReviewIds.size} 条？`)) return;
+  try {
+    for (const key of selectedReviewIds) {
+      const [studentId, historyId] = key.split('|');
+      await apiRequest(`/students/${studentId}/history/${historyId}/review`, {
+        method: 'POST',
+        body: JSON.stringify({ status })
+      });
+    }
+    showToast(`已处理 ${selectedReviewIds.size} 条`);
+    selectedReviewIds.clear();
+    await loadPending();
+    await loadStats();
+    await refreshAll(false);
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+function getPendingCount(student) {
+  return student.history.filter(h => h.status === 'pending').length;
+}
+
+function renderStudents(students) {
+  const tbody = $('#studentsTbody');
+  if (!students.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty"><i class="fas fa-inbox"></i>暂无学生数据</td></tr>`;
+    return;
+  }
+  let html = '';
+  students.forEach((s, idx) => {
+    const initial = s.name.charAt(0);
+    const checked = selectedIds.has(s.id);
+    const pending = getPendingCount(s);
+    const pendingBadge = pending > 0
+      ? `<span class="badge badge-pending"><i class="fas fa-clock"></i> ${pending}</span>`
+      : `<span style="color:var(--text-dim); font-size:.8rem;">—</span>`;
+    const typeBadge = `<span class="badge ${typeBadgeClass(s.type)}"><i class="fas ${typeIcon(s.type)}"></i>${typeLabel(s.type)}</span>`;
+    html += `<tr style="animation-delay:${Math.min(idx * 25, 300)}ms">
+      <td><input type="checkbox" class="checkbox row-check" data-id="${s.id}" ${checked ? 'checked' : ''}></td>
+      <td><div class="name-cell"><span class="avatar">${initial}</span><span>${s.name}</span></div></td>
+      <td><span class="badge badge-class">${s.class || '—'}</span></td>
+      <td>${typeBadge}</td>
+      <td><span class="badge badge-count">${s.leaveCount} 次</span></td>
+      <td>${pendingBadge}</td>
+      <td style="color:var(--text-muted); font-size:.82rem;">${s.lastLeave || '—'}</td>
+      <td style="text-align:right; white-space:nowrap;">
+        <button class="btn btn-ghost btn-xs btn-icon edit-student" data-id="${s.id}" title="编辑学生"><i class="fas fa-user-edit"></i></button>
+        <button class="btn btn-ghost btn-xs btn-icon view-history" data-id="${s.id}" title="请假历史"><i class="fas fa-history"></i></button>
+        <button class="btn btn-danger btn-xs btn-icon reset-one" data-id="${s.id}" title="重置请假"><i class="fas fa-undo-alt"></i></button>
+        <button class="btn btn-danger btn-xs btn-icon delete-one" data-id="${s.id}" title="删除"><i class="fas fa-trash"></i></button>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+
+  $$('.reset-one').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const stu = allStudents.find(s => s.id === id);
+      if (!stu) return;
+      if (!confirm(`确定重置 ${stu.name} 的所有请假记录？`)) return;
+      try {
+        await apiRequest(`/admin/students/${id}/reset`, { method:'POST' });
+        showToast(`已重置 ${stu.name}`);
+        await refreshAll(false);
+        await loadStats();
+      } catch (e) { showToast(e.message, 'error'); }
+    });
+  });
+
+  $$('.delete-one').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const stu = allStudents.find(s => s.id === id);
+      if (!stu) return;
+      if (!confirm(`确定删除学生 "${stu.name}" ？`)) return;
+      try {
+        await apiRequest(`/admin/students/${id}`, { method:'DELETE' });
+        showToast(`已删除 ${stu.name}`);
+        selectedIds.delete(id);
+        await refreshAll(false);
+        await loadStats();
+      } catch (e) { showToast(e.message, 'error'); }
+    });
+  });
+
+  $$('.view-history').forEach(btn => {
+    btn.addEventListener('click', () => openHistoryModal(btn.dataset.id));
+  });
+
+  $$('.edit-student').forEach(btn => {
+    btn.addEventListener('click', () => openEditStudentModal(btn.dataset.id));
+  });
+
+  $$('.row-check').forEach(cb => {
+    cb.addEventListener('change', () => {
+      const id = cb.dataset.id;
+      if (cb.checked) selectedIds.add(id);
+      else selectedIds.delete(id);
+      updateBulkBar();
+    });
+  });
+
+  updateBulkBar();
+}
+
+function updateBulkBar() {
+  const bar = $('#bulkBar');
+  const count = selectedIds.size;
+  animateNumber($('#selectedCount'), count);
+  bar.classList.toggle('show', count > 0);
+  const allChecked = allStudents.length > 0 && allStudents.every(s => selectedIds.has(s.id));
+  $('#selectAll').checked = allChecked;
+}
+
+async function openHistoryModal(studentId) {
+  const stu = allStudents.find(s => s.id === studentId);
+  if (!stu) return;
+  currentHistoryStudentId = studentId;
+  const typeText = typeLabel(stu.type);
+  $('#historyTitle').textContent = `${stu.name} · ${typeText}生 · 请假历史`;
+  $('#newHistoryDate').value = new Date().toISOString().slice(0, 10);
+  $('#newHistoryReason').value = '';
+  if ($('#newHistoryType')._customSelect) {
+    $('#newHistoryType').value = 'new';
+    $('#newHistoryType')._customSelect.refresh();
+  }
+  if ($('#newHistoryStatus')._customSelect) {
+    $('#newHistoryStatus').value = 'approved';
+    $('#newHistoryStatus')._customSelect.refresh();
+  }
+  $('#historyModal').classList.add('show');
+  await loadHistoryList(studentId);
+}
+
+async function loadHistoryList(studentId) {
+  const container = $('#historyList');
+  container.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>';
+  try {
+    const res = await apiRequest(`/students/${studentId}/history`);
+    const list = res.data;
+    if (!list.length) {
+      container.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无请假记录</div>`;
+      return;
+    }
+    let html = '<div class="timeline">';
+    list.forEach(h => {
+      const typeText = h.type === 'extend' ? '续假' : '新请假';
+      const dotClass = h.type === 'extend' ? 'extend' : 'new';
+      const dotIcon = h.type === 'extend' ? 'fa-clock' : 'fa-file-medical';
+      let statusBadge = '';
+      if (h.status === 'approved') statusBadge = '<span class="badge badge-approved"><i class="fas fa-check"></i> 已通过</span>';
+      else if (h.status === 'rejected') statusBadge = '<span class="badge badge-rejected"><i class="fas fa-times"></i> 已驳回</span>';
+      else statusBadge = '<span class="badge badge-pending"><i class="fas fa-clock"></i> 待审核</span>';
+
+      html += `
+        <div class="history-item" data-hid="${h.id}">
+          <div class="history-dot ${dotClass}"><i class="fas ${dotIcon}"></i></div>
+          <div class="history-content">
+            <div class="history-head">
+              <span class="history-date">${h.date}</span>
+              <span class="badge ${h.type === 'extend' ? 'badge-yellow' : 'badge-count'}">${typeText}</span>
+              ${statusBadge}
+              <div class="history-actions">
+                ${h.status === 'pending' ? `
+                  <button class="btn btn-success btn-xs approve-h" data-hid="${h.id}"><i class="fas fa-check"></i> 通过</button>
+                  <button class="btn btn-danger-solid btn-xs reject-h" data-hid="${h.id}"><i class="fas fa-times"></i> 驳回</button>
+                ` : ''}
+                <button class="btn btn-ghost btn-xs edit-history" data-hid="${h.id}" title="编辑"><i class="fas fa-edit"></i></button>
+                <button class="btn btn-danger btn-xs delete-history" data-hid="${h.id}" title="删除"><i class="fas fa-trash"></i></button>
+              </div>
+            </div>
+            <div class="history-reason">${h.reason || '—'}</div>
+            <div class="history-edit-form" style="display:none;"></div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+
+    $$('.approve-h').forEach(btn => {
+      btn.addEventListener('click', () => reviewOne(studentId, btn.dataset.hid, 'approved'));
+    });
+    $$('.reject-h').forEach(btn => {
+      btn.addEventListener('click', () => reviewOne(studentId, btn.dataset.hid, 'rejected'));
+    });
+
+    $$('.edit-history').forEach(btn => {
+      btn.addEventListener('click', () => showHistoryEditForm(btn.dataset.hid));
+    });
+
+    $$('.delete-history').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('确定删除该条记录？')) return;
+        try {
+          await apiRequest(`/students/${studentId}/history/${btn.dataset.hid}`, { method:'DELETE' });
+          showToast('已删除记录');
+          await loadHistoryList(studentId);
+          await refreshAll(false);
+          await loadStats();
+        } catch (e) { showToast(e.message, 'error'); }
+      });
+    });
+  } catch (e) {
+    container.innerHTML = `<div class="empty"><i class="fas fa-exclamation-triangle"></i>${e.message}</div>`;
+  }
+}
+
+function showHistoryEditForm(historyId) {
+  const item = document.querySelector(`.history-item[data-hid="${historyId}"]`);
+  if (!item) return;
+  const form = item.querySelector('.history-edit-form');
+  if (form.style.display !== 'none') { form.style.display = 'none'; return; }
+
+  apiRequest(`/students/${currentHistoryStudentId}/history`).then(res => {
+    const rec = res.data.find(h => h.id === historyId);
+    if (!rec) return;
+    form.innerHTML = `
+      <div class="form-row">
+        <div class="custom-input-wrap has-date-icon">
+          <input type="date" class="custom-input edit-date" value="${rec.date}">
+          <i class="fas fa-calendar-alt input-icon date-icon"></i>
+        </div>
+        <select class="custom-select edit-type" style="display:none">
+          <option value="new" ${rec.type === 'new' ? 'selected' : ''}>新请假</option>
+          <option value="extend" ${rec.type === 'extend' ? 'selected' : ''}>续假</option>
+        </select>
+        <div class="custom-input-wrap has-icon">
+          <i class="fas fa-comment-dots input-icon"></i>
+          <input type="text" class="custom-input edit-reason" value="${rec.reason || ''}" placeholder="原因" maxlength="50">
+        </div>
+      </div>
+      <div class="form-row" style="margin-top:.5rem; grid-template-columns:1fr;">
+        <select class="custom-select edit-status" style="display:none">
+          <option value="pending" ${rec.status === 'pending' ? 'selected' : ''}>待审核</option>
+          <option value="approved" ${rec.status === 'approved' ? 'selected' : ''}>已通过</option>
+          <option value="rejected" ${rec.status === 'rejected' ? 'selected' : ''}>已驳回</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:.5rem; margin-top:.5rem; justify-content:flex-end;">
+        <button class="btn btn-ghost btn-xs cancel-edit">取消</button>
+        <button class="btn btn-primary btn-xs save-edit"><i class="fas fa-save"></i> 保存</button>
+      </div>
+    `;
+    form.style.display = 'block';
+
+    form.querySelectorAll('select').forEach(sel => {
+      if (!sel._customSelect) {
+        sel._customSelect = new CustomSelect(sel, {
+          placeholder: sel.dataset.placeholder || '请选择'
+        });
+      }
+    });
+
+    form.querySelector('.cancel-edit').addEventListener('click', () => form.style.display = 'none');
+    form.querySelector('.save-edit').addEventListener('click', async () => {
+      const date = form.querySelector('.edit-date').value;
+      const type = form.querySelector('.edit-type').value;
+      const reason = form.querySelector('.edit-reason').value.trim();
+      const status = form.querySelector('.edit-status').value;
+      if (!date) return showToast('请选择日期', 'error');
+      try {
+        await apiRequest(`/students/${currentHistoryStudentId}/history/${historyId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ date, type, reason, status })
+        });
+        showToast('已更新记录');
+        await loadHistoryList(currentHistoryStudentId);
+        await refreshAll(false);
+        await loadStats();
+      } catch (e) { showToast(e.message, 'error'); }
+    });
+  });
+}
+
+function closeHistoryModal() {
+  $('#historyModal').classList.remove('show');
+  currentHistoryStudentId = null;
+}
+
+function openEditStudentModal(studentId) {
+  const stu = allStudents.find(s => s.id === studentId);
+  if (!stu) return;
+  editingStudentId = studentId;
+  $('#editStudentName').value = stu.name;
+  $('#editStudentClass').value = stu.class;
+  if ($('#editStudentType')._customSelect) {
+    $('#editStudentType').value = stu.type || 'day';
+    $('#editStudentType')._customSelect.refresh();
+  }
+  $('#editStudentModal').classList.add('show');
+  setTimeout(() => $('#editStudentName').focus(), 200);
+}
+
+function closeEditStudentModal() {
+  $('#editStudentModal').classList.remove('show');
+  editingStudentId = null;
+}
+
+async function saveStudentInfo() {
+  if (!editingStudentId) return;
+  const name = $('#editStudentName').value.trim();
+  const className = $('#editStudentClass').value.trim();
+  const type = $('#editStudentType').value;
+  if (!name) return showToast('姓名不能为空', 'error');
+  try {
+    await apiRequest(`/admin/students/${editingStudentId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ name, class: className, type })
+    });
+    showToast('已保存');
+    closeEditStudentModal();
+    await loadClassFilter();
+    await refreshAll(false);
+    await loadStats();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function loadClassFilter() {
+  try {
+    const res = await apiRequest('/classes');
+    const sel = $('#classFilter');
+    const cur = sel.value;
+    sel.innerHTML = '<option value="all">全部班级</option>';
+    res.data.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c; o.textContent = c;
+      sel.appendChild(o);
+    });
+    if (cur) sel.value = cur;
+    if (sel._customSelect) sel._customSelect.refresh();
+    const dl = $('#classList');
+    dl.innerHTML = '';
+    res.data.forEach(c => {
+      const o = document.createElement('option');
+      o.value = c;
+      dl.appendChild(o);
+    });
+  } catch (e) {}
+}
+
+function applyFilterAndRender() {
+  const search = $('#searchInput').value.trim().toLowerCase();
+  let filtered = allStudents;
+  if (currentTypeFilter !== 'all') filtered = filtered.filter(s => s.type === currentTypeFilter);
+  if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search));
+  renderStudents(filtered);
+}
+
+async function refreshAll(showMsg = true) {
+  if (isLoading) return;
+  isLoading = true;
+  try {
+    const cls = $('#classFilter').value;
+    const query = cls && cls !== 'all' ? `?class=${encodeURIComponent(cls)}` : '';
+    const res = await apiRequest('/students' + query);
+    allStudents = res.data;
+    applyFilterAndRender();
+    if (showMsg) showToast('数据已刷新');
+  } catch (e) {
+    showToast(`加载失败: ${e.message}`, 'error');
+  } finally {
+    isLoading = false;
+  }
+}
+
+async function addStudent(name, className, type) {
+  if (!name || !name.trim()) return false;
+  try {
+    await apiRequest('/admin/students', {
+      method:'POST',
+      body: JSON.stringify({ name: name.trim(), class: className?.trim() || '未分班', type: type || 'day' })
+    });
+    showToast(`已添加学生 ${name}`);
+    return true;
+  } catch (e) { showToast(e.message, 'error'); return false; }
+}
+
+async function bulkUpdateType(type) {
+  if (!selectedIds.size) return;
+  const typeText = type === 'boarding' ? '住宿' : '走读';
+  if (!confirm(`确定将所选 ${selectedIds.size} 名学生设为${typeText}生？`)) return;
+  try {
+    for (const id of selectedIds) {
+      const stu = allStudents.find(s => s.id === id);
+      if (!stu) continue;
+      await apiRequest(`/admin/students/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name: stu.name, class: stu.class, type })
+      });
+    }
+    showToast(`已将 ${selectedIds.size} 名学生设为${typeText}生`);
+    selectedIds.clear();
+    await refreshAll(false);
+    await loadStats();
+  } catch (e) { showToast(e.message, 'error'); }
+}
+
+async function handleRefresh() {
+  const btn = $('#refreshBtn');
+  if (btn.classList.contains('rotating')) return;
+  btn.classList.add('rotating');
+  const icon = btn.querySelector('i');
+  if (icon) icon.classList.add('rotate-once');
+  btn.disabled = true;
+  try {
+    if (currentTab === 'review') await loadPending();
+    await refreshAll(false);
+    await loadStats();
+    showToast('数据已刷新');
+  } finally {
+    setTimeout(() => {
+      btn.classList.remove('rotating');
+      if (icon) icon.classList.remove('rotate-once');
+      btn.disabled = false;
+    }, 650);
+  }
+}
+
+function bindEvents() {
+  $('#classFilter').addEventListener('change', () => refreshAll(false));
+  $('#searchInput').addEventListener('input', applyFilterAndRender);
+
+  $$('.main-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  // 学生类型筛选
+  $$('#typeFilterBar .type-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      $$('#typeFilterBar .type-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTypeFilter = btn.dataset.type;
+      applyFilterAndRender();
+    });
+  });
+
+  $('#selectAll').addEventListener('change', (e) => {
+    const visibleIds = Array.from($$('.row-check')).map(cb => cb.dataset.id);
+    if (e.target.checked) visibleIds.forEach(id => selectedIds.add(id));
+    else visibleIds.forEach(id => selectedIds.delete(id));
+    applyFilterAndRender();
+  });
+
+  $('#bulkResetBtn').addEventListener('click', async () => {
+    if (!selectedIds.size) return;
+    if (!confirm(`确定重置所选 ${selectedIds.size} 名学生的请假记录？`)) return;
+    try {
+      for (const id of selectedIds) await apiRequest(`/admin/students/${id}/reset`, { method:'POST' });
+      showToast(`已重置 ${selectedIds.size} 名学生`);
+      selectedIds.clear();
+      await refreshAll(false);
+      await loadStats();
+    } catch (e) { showToast(e.message, 'error'); }
+  });
+
+  $('#bulkBoardingBtn').addEventListener('click', () => bulkUpdateType('boarding'));
+  $('#bulkDayBtn').addEventListener('click', () => bulkUpdateType('day'));
+
+  $('#bulkDeleteBtn').addEventListener('click', async () => {
+    if (!selectedIds.size) return;
+    if (!confirm(`确定删除所选 ${selectedIds.size} 名学生？`)) return;
+    try {
+      for (const id of selectedIds) await apiRequest(`/admin/students/${id}`, { method:'DELETE' });
+      showToast(`已删除 ${selectedIds.size} 名学生`);
+      selectedIds.clear();
+      await refreshAll(false);
+      await loadStats();
+    } catch (e) { showToast(e.message, 'error'); }
+  });
+
+  $('#clearSelectionBtn').addEventListener('click', () => {
+    selectedIds.clear();
+    applyFilterAndRender();
+  });
+
+  $('#quickAddBtn').addEventListener('click', async () => {
+    const name = $('#newStudentName').value.trim();
+    const cls = $('#newStudentClass').value.trim();
+    const type = $('#newStudentType').value || 'day';
+    if (!name) return showToast('请输入学生姓名', 'error');
+    const btn = $('#quickAddBtn');
+    btn.disabled = true;
+    const ok = await addStudent(name, cls, type);
+    btn.disabled = false;
+    if (ok) {
+      $('#newStudentName').value = '';
+      $('#newStudentClass').value = '';
+      if ($('#newStudentType')._customSelect) {
+        $('#newStudentType').value = 'day';
+        $('#newStudentType')._customSelect.refresh();
+      }
+      await loadClassFilter();
+      await refreshAll(false);
+      await loadStats();
+    }
+  });
+
+  $('#newStudentName').addEventListener('keypress', e => { if (e.key === 'Enter') $('#quickAddBtn').click(); });
+  $('#newStudentClass').addEventListener('keypress', e => { if (e.key === 'Enter') $('#quickAddBtn').click(); });
+
+  $('#addStudentBtn').addEventListener('click', () => {
+    if (currentTab !== 'students') switchTab('students');
+    setTimeout(() => {
+      $('#newStudentName').focus();
+      $('#newStudentName').scrollIntoView({ behavior:'smooth', block:'center' });
+    }, 100);
+  });
+
+  $('#refreshBtn').addEventListener('click', handleRefresh);
+  $('#logoutBtn').addEventListener('click', () => { if (confirm('确定退出登录？')) handleLogout(); });
+
+  $('#approveAllBtn').addEventListener('click', () => reviewAllPending('approved'));
+  $('#rejectAllBtn').addEventListener('click', () => reviewAllPending('rejected'));
+  $('#refreshPendingBtn').addEventListener('click', async (e) => {
+    const btn = e.currentTarget;
+    const icon = btn.querySelector('i');
+    if (icon) icon.classList.add('rotate-once');
+    await loadPending();
+    setTimeout(() => { if (icon) icon.classList.remove('rotate-once'); }, 600);
+  });
+  $('#bulkApproveBtn').addEventListener('click', () => bulkReview('approved'));
+  $('#bulkRejectBtn').addEventListener('click', () => bulkReview('rejected'));
+  $('#clearReviewSelectionBtn').addEventListener('click', () => {
+    selectedReviewIds.clear();
+    updateBulkReviewBar();
+    loadPending();
+  });
+
+  $('#addHistoryBtn').addEventListener('click', async () => {
+    if (!currentHistoryStudentId) return;
+    const date = $('#newHistoryDate').value;
+    const type = $('#newHistoryType').value;
+    const reason = $('#newHistoryReason').value.trim();
+    const status = $('#newHistoryStatus').value;
+    if (!date) return showToast('请选择日期', 'error');
+    try {
+      await apiRequest(`/students/${currentHistoryStudentId}/history`, {
+        method:'POST',
+        body: JSON.stringify({ date, type, reason, status })
+      });
+      showToast('已添加记录');
+      $('#newHistoryReason').value = '';
+      await loadHistoryList(currentHistoryStudentId);
+      await refreshAll(false);
+      await loadStats();
+    } catch (e) { showToast(e.message, 'error'); }
+  });
+
+  $('#saveStudentInfoBtn').addEventListener('click', saveStudentInfo);
+  $('#editStudentName').addEventListener('keypress', e => { if (e.key === 'Enter') saveStudentInfo(); });
+
+  $('#historyModal').addEventListener('click', e => {
+    if (e.target === $('#historyModal')) closeHistoryModal();
+  });
+  $('#editStudentModal').addEventListener('click', e => {
+    if (e.target === $('#editStudentModal')) closeEditStudentModal();
+  });
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeHistoryModal(); closeEditStudentModal(); }
+  });
+
+  $('#loginForm').addEventListener('submit', handleLogin);
+}
+
+async function initAppData() {
+  await loadClassFilter();
+  await refreshAll(false);
+  await loadStats();
+}
+
+async function init() {
+  initCustomSelects();
+  bindEvents();
+  if (adminToken) {
+    try {
+      await apiRequest('/students');
+      showApp();
+      await initAppData();
+    } catch (e) { handleLogout(); }
+  } else {
+    showLogin();
+  }
+}
+init();
+</script>
+</body>
+</html>

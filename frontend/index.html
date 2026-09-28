@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+<meta name="theme-color" content="#4f46e5">
+<title>学生请假系统</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  :root {
+    --primary:#4f46e5; --primary-hover:#4338ca; --primary-light:rgba(79,70,229,.1);
+    --bg:#f8fafc; --card:#ffffff;
+    --text:#0f172a; --text-muted:#64748b;
+    --border:#e2e8f0;
+    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+    --shadow-md:0 4px 12px rgba(15,23,42,.06);
+    --shadow-lg:0 12px 32px rgba(15,23,42,.1);
+    --green:#16a34a; --yellow:#d97706; --red:#dc2626;
+  }
+  html { scroll-behavior:smooth; }
+  body {
+    background:var(--bg); font-family:'Inter',system-ui,-apple-system,sans-serif;
+    color:var(--text); line-height:1.6; min-height:100vh;
+    background-image:radial-gradient(circle at 0% 0%, rgba(79,70,229,.06) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(139,92,246,.05) 0%, transparent 50%);
+    background-attachment:fixed;
+  }
+  .container { max-width:1200px; margin:0 auto; padding:2.5rem 2rem 4rem; }
+
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes pop { 0% { transform:scale(.9); opacity:0; } 100% { transform:scale(1); opacity:1; } }
+  @keyframes rotateOnce { from { transform:rotate(0); } to { transform:rotate(360deg); } }
+  @keyframes pulseGlow { 0%, 100% { box-shadow:0 0 0 0 rgba(34,197,94,.4); } 50% { box-shadow:0 0 0 8px rgba(34,197,94,0); } }
+
+  /* ============ Header ============ */
+  .header {
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:2rem; flex-wrap:wrap; gap:1rem;
+    animation:fadeInUp .5s cubic-bezier(.22,1,.36,1) both;
+  }
+  .brand { display:flex; align-items:center; gap:1rem; }
+  .brand-logo {
+    width:48px; height:48px; border-radius:14px;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    display:flex; align-items:center; justify-content:center;
+    color:white; font-size:1.25rem;
+    box-shadow:0 8px 20px rgba(79,70,229,.25);
+    flex-shrink:0;
+  }
+  .brand-text h1 { font-size:1.4rem; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
+  .brand-text p { font-size:.82rem; color:var(--text-muted); margin-top:.1rem; }
+
+  .header-actions { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+
+  .status-pill {
+    display:flex; align-items:center; gap:.5rem;
+    padding:.5rem 1rem; border-radius:40px;
+    background:var(--card); border:1px solid var(--border);
+    font-size:.8rem; color:var(--text-muted);
+    box-shadow:var(--shadow-sm);
+    height:42px;
+  }
+  .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+  .status-online { background:#22c55e; animation:pulseGlow 2.5s infinite; }
+  .status-offline { background:#ef4444; }
+
+  .btn {
+    display:inline-flex; align-items:center; gap:.5rem;
+    padding:0 1.15rem; height:42px;
+    border-radius:40px;
+    font-family:inherit; font-size:.86rem; font-weight:500;
+    cursor:pointer; border:none; text-decoration:none;
+    transition:all .2s cubic-bezier(.22,1,.36,1);
+    white-space:nowrap;
+  }
+  .btn i { transition:transform .2s; }
+  .btn:hover i.fa-sync-alt { transform:rotate(180deg); }
+  .btn:hover i.fa-image { transform:scale(1.15); }
+  .btn-primary { background:var(--primary); color:white; box-shadow:0 4px 12px rgba(79,70,229,.25); }
+  .btn-primary:hover { background:var(--primary-hover); transform:translateY(-2px); box-shadow:0 8px 20px rgba(79,70,229,.35); }
+  .btn-primary:disabled { background:#94a3b8; box-shadow:none; transform:none; cursor:not-allowed; }
+  .btn-outline { background:var(--card); color:var(--text); border:1px solid var(--border); }
+  .btn-outline:hover { border-color:var(--primary); color:var(--primary); transform:translateY(-2px); }
+  .btn-success { background:var(--green); color:white; box-shadow:0 4px 12px rgba(22,163,74,.25); }
+  .btn-success:hover { background:#15803d; transform:translateY(-2px); box-shadow:0 8px 20px rgba(22,163,74,.35); }
+  .btn-success:disabled { background:#94a3b8; cursor:not-allowed; transform:none; box-shadow:none; }
+  .btn-icon-only { padding:0; width:42px; justify-content:center; }
+
+  /* ============ 主卡片 ============ */
+  .main-card {
+    background:var(--card); border-radius:24px;
+    border:1px solid var(--border);
+    box-shadow:var(--shadow-md);
+    overflow:hidden;
+    animation:fadeInUp .55s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  /* ============ 工具栏 ============ */
+  .toolbar {
+    padding:1.5rem 2rem;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1.25rem; flex-wrap:wrap;
+    border-bottom:1px solid var(--border);
+  }
+  .toolbar-title {
+    display:flex; align-items:center; gap:.65rem;
+    font-size:1.05rem; font-weight:600;
+  }
+  .toolbar-title i {
+    width:34px; height:34px; border-radius:10px;
+    background:var(--primary-light); color:var(--primary);
+    display:inline-flex; align-items:center; justify-content:center;
+    font-size:.85rem;
+  }
+  .toolbar-sub { font-size:.82rem; color:var(--text-muted); font-weight:400; margin-left:.2rem; }
+
+  .toolbar-right { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+
+  /* ============ 筛选栏 ============ */
+  .filter-row {
+    padding:1rem 2rem;
+    display:flex; align-items:center; justify-content:space-between;
+    gap:1rem; flex-wrap:wrap;
+    background:#fafbfc;
+    border-bottom:1px solid var(--border);
+  }
+  .filter-group { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
+  .filter-label { font-size:.78rem; color:var(--text-muted); font-weight:500; margin-right:.25rem; }
+
+  .filter-tabs { display:inline-flex; background:#eef2f7; border-radius:40px; padding:3px; gap:2px; }
+  .filter-tab {
+    padding:.4rem .95rem; border-radius:30px;
+    font-size:.78rem; font-weight:500; cursor:pointer;
+    color:var(--text-muted); border:none; background:transparent;
+    font-family:inherit;
+    transition:all .2s cubic-bezier(.22,1,.36,1);
+    display:inline-flex; align-items:center; gap:.4rem;
+    white-space:nowrap;
+  }
+  .filter-tab:hover { color:var(--text); }
+  .filter-tab.active { background:white; color:var(--primary); box-shadow:0 2px 6px rgba(15,23,42,.08); }
+  .filter-tab .count {
+    background:rgba(79,70,229,.12); color:var(--primary);
+    font-size:.68rem; padding:.05rem .4rem; border-radius:20px; font-weight:600;
+  }
+  .filter-tab.active .count { background:var(--primary); color:white; }
+  .filter-tab.type-tab.active { background:#ede9fe; color:#7c3aed; }
+  .filter-tab.type-tab.active .count { background:#8b5cf6; color:white; }
+
+  /* ============ 表格 ============ */
+  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  table { width:100%; border-collapse:collapse; font-size:.9rem; }
+  thead th {
+    text-align:left; padding:1rem 1.5rem;
+    background:#fafbfc; font-weight:600; color:var(--text-muted);
+    font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;
+    border-bottom:1px solid var(--border); white-space:nowrap;
+  }
+  tbody td {
+    padding:1.1rem 1.5rem;
+    border-bottom:1px solid #f1f5f9;
+    vertical-align:middle;
+  }
+  tbody tr:last-child td { border-bottom:none; }
+  tbody tr { transition:background .15s; }
+  tbody tr:hover { background:#fafbfc; }
+
+  .student-cell { display:flex; align-items:center; gap:.85rem; }
+  .avatar {
+    width:38px; height:38px; border-radius:50%;
+    background:linear-gradient(135deg, var(--primary), #8b5cf6);
+    display:inline-flex; align-items:center; justify-content:center;
+    color:white; font-weight:600; font-size:.85rem; flex-shrink:0;
+  }
+  .student-info { display:flex; flex-direction:column; gap:.15rem; min-width:0; }
+  .student-name { font-weight:500; font-size:.92rem; }
+  .student-meta { font-size:.75rem; color:var(--text-muted); display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+
+  .badge {
+    display:inline-block; padding:.25rem .7rem; border-radius:30px;
+    font-size:.72rem; font-weight:600; white-space:nowrap; line-height:1.4;
+  }
+  .badge i { margin-right:.25rem; }
+  .badge-count { background:var(--primary-light); color:var(--primary); }
+  .badge-class { background:#f1f5f9; color:#475569; font-weight:500; }
+  .badge-pending { background:#fef3c7; color:#d97706; }
+  .badge-approved { background:#dcfce7; color:#16a34a; }
+  .badge-rejected { background:#fee2e2; color:#dc2626; }
+  .badge-boarding { background:#dbeafe; color:#2563eb; }
+  .badge-day { background:#fef3c7; color:#b45309; }
+
+  .row-actions { display:flex; gap:.35rem; justify-content:flex-end; }
+  .icon-btn {
+    width:36px; height:36px; border-radius:10px;
+    border:none; background:transparent; color:var(--text-muted);
+    cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
+    transition:all .2s; font-size:.92rem;
+  }
+  .icon-btn:hover { background:var(--primary-light); color:var(--primary); transform:scale(1.08); }
+  .icon-btn:active { transform:scale(.95); }
+  .icon-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+  /* ============ 移动端卡片列表 ============ */
+  .mobile-list { display:none; padding:1rem 1.25rem 1.5rem; gap:.85rem; flex-direction:column; }
+  .student-card {
+    background:#fff; border:1px solid var(--border); border-radius:16px;
+    padding:1.1rem 1.15rem;
+    transition:all .2s; animation:fadeInUp .3s both;
+  }
+  .student-card:active { transform:scale(.99); }
+  .student-card-header { display:flex; align-items:flex-start; gap:.85rem; margin-bottom:.85rem; }
+  .student-card-info { flex:1; min-width:0; }
+  .student-card-name { font-weight:600; font-size:1rem; margin-bottom:.35rem; }
+  .student-card-tags { display:flex; gap:.4rem; flex-wrap:wrap; }
+  .student-card-body {
+    display:flex; align-items:center; justify-content:space-between;
+    gap:.85rem; padding-top:.85rem;
+    border-top:1px dashed #f1f5f9;
+  }
+  .student-card-stats { display:flex; align-items:center; gap:.85rem; font-size:.78rem; color:var(--text-muted); }
+  .student-card-stats strong { color:var(--text); font-weight:600; }
+  .student-card-actions { display:flex; gap:.4rem; }
+
+  /* ============ 自定义输入框 ============ */
+  .custom-input-wrap { position:relative; width:100%; }
+  .custom-input {
+    width:100%; padding:.8rem 1.1rem;
+    border:1.5px solid var(--border); border-radius:12px;
+    background:#fff; color:var(--text);
+    font-family:inherit; font-size:.9rem; line-height:1.5;
+    transition:all .2s; -webkit-appearance:none; appearance:none; outline:none;
+    min-height:46px;
+  }
+  .custom-input::placeholder { color:var(--text-muted); opacity:.7; }
+  .custom-input:hover:not(:focus) { border-color:#cbd5e1; }
+  .custom-input:focus {
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(79,70,229,.12);
+  }
+  .custom-input-wrap.has-icon .custom-input { padding-left:2.75rem; }
+  .custom-input-wrap.has-icon .input-icon {
+    position:absolute; left:1rem; top:50%; transform:translateY(-50%);
+    color:var(--text-muted); font-size:.9rem;
+    pointer-events:none; transition:color .2s;
+  }
+  .custom-input-wrap.has-icon:focus-within .input-icon { color:var(--primary); }
+
+  /* ============ 自定义下拉 ============ */
+  .custom-select { position:relative; width:100%; user-select:none; outline:none; }
+  .custom-select-trigger {
+    width:100%; padding:.8rem 2.5rem .8rem 1.1rem;
+    border:1.5px solid var(--border); border-radius:12px;
+    background:#fff; color:var(--text); font-size:.9rem;
+    cursor:pointer; transition:all .2s;
+    position:relative; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    min-height:46px; display:flex; align-items:center;
+  }
+  .custom-select-trigger::after {
+    content:''; position:absolute; right:1.1rem; top:50%;
+    width:7px; height:7px;
+    border-right:2px solid var(--text-muted); border-bottom:2px solid var(--text-muted);
+    transform:translateY(-70%) rotate(45deg);
+    transition:transform .25s; pointer-events:none;
+  }
+  .custom-select.open .custom-select-trigger {
+    border-color:var(--primary);
+    box-shadow:0 0 0 4px rgba(79,70,229,.12);
+  }
+  .custom-select.open .custom-select-trigger::after {
+    transform:translateY(-30%) rotate(225deg); border-color:var(--primary);
+  }
+  .custom-select-trigger.placeholder { color:var(--text-muted); }
+  .custom-select-panel {
+    position:absolute; top:calc(100% + 6px); left:0; right:0;
+    background:#fff; border:1px solid var(--border); border-radius:12px;
+    box-shadow:0 12px 32px rgba(15,23,42,.15);
+    z-index:100; max-height:260px; overflow-y:auto;
+    opacity:0; transform:translateY(-6px) scale(.98);
+    pointer-events:none; transition:all .2s;
+    padding:4px;
+  }
+  .custom-select.open .custom-select-panel {
+    opacity:1; transform:translateY(0) scale(1); pointer-events:auto;
+  }
+  .custom-select-option {
+    padding:.7rem .9rem; border-radius:8px;
+    font-size:.88rem; color:var(--text); cursor:pointer;
+    transition:background .15s; display:flex; align-items:center; gap:.5rem;
+  }
+  .custom-select-option:hover,
+  .custom-select-option.highlight { background:var(--primary-light); color:var(--primary); }
+  .custom-select-option.selected {
+    background:var(--primary-light); color:var(--primary); font-weight:600;
+  }
+  .custom-select-option.selected::before {
+    content:'\f00c'; font-family:'Font Awesome 6 Free'; font-weight:900;
+    font-size:.7rem; margin-right:.25rem;
+  }
+
+  /* ============ Modal ============ */
+  .modal-backdrop {
+    position:fixed; inset:0; background:rgba(15,23,42,.5);
+    display:none; align-items:center; justify-content:center;
+    z-index:1000; padding:1.5rem;
+    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+    opacity:0; transition:opacity .25s;
+  }
+  .modal-backdrop.show { display:flex; opacity:1; }
+  .modal {
+    background:white; border-radius:20px; max-width:520px; width:100%;
+    max-height:90vh; overflow-y:auto;
+    box-shadow:0 30px 60px rgba(0,0,0,.2);
+    transform:scale(.96) translateY(8px);
+    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .modal-backdrop.show .modal { transform:scale(1) translateY(0); }
+  .modal-header {
+    padding:1.5rem 1.75rem; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .modal-title { font-size:1.05rem; font-weight:600; display:flex; align-items:center; gap:.6rem; }
+  .modal-title i {
+    width:32px; height:32px; border-radius:10px;
+    background:var(--primary-light); color:var(--primary);
+    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem;
+  }
+  .modal-body { padding:1.75rem; }
+  .modal-footer {
+    padding:1.25rem 1.75rem; border-top:1px solid var(--border);
+    display:flex; justify-content:flex-end; gap:.6rem;
+  }
+  .close-btn {
+    background:transparent; border:none; font-size:1.1rem;
+    color:var(--text-muted); cursor:pointer;
+    width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center;
+    transition:all .2s;
+  }
+  .close-btn:hover { background:#f1f5f9; color:var(--text); transform:rotate(90deg); }
+
+  /* ============ 表单 ============ */
+  .form-group { margin-bottom:1.4rem; }
+  .form-group:last-of-type { margin-bottom:1.75rem; }
+  label { display:block; font-size:.83rem; font-weight:500; color:var(--text); margin-bottom:.55rem; }
+
+  .form-hint {
+    margin-top:1.25rem; padding-top:1.1rem;
+    border-top:1px dashed var(--border);
+    font-size:.82rem; color:var(--text-muted);
+    display:flex; align-items:flex-start; gap:.55rem; line-height:1.55;
+  }
+  .form-hint i { color:var(--primary); margin-top:.2rem; flex-shrink:0; }
+
+  .submit-btn { width:100%; justify-content:center; height:48px; font-size:.92rem; }
+
+  /* ============ Timeline ============ */
+  .timeline { padding:.5rem 0; }
+  .history-item {
+    display:flex; align-items:flex-start; gap:1.1rem;
+    padding:1.2rem 0; border-bottom:1px solid #f1f5f9;
+    animation:fadeInUp .3s both;
+  }
+  .history-item:last-child { border-bottom:none; }
+  .history-dot {
+    width:40px; height:40px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center; font-size:.88rem;
+  }
+  .history-dot.new { background:var(--primary-light); color:var(--primary); }
+  .history-dot.extend { background:#fef3c7; color:#d97706; }
+  .history-content { flex:1; min-width:0; }
+  .history-head { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
+  .history-date { font-weight:600; font-size:.92rem; }
+  .history-reason { font-size:.87rem; color:var(--text-muted); word-break:break-word; }
+
+  /* ============ Toast ============ */
+  .toast {
+    position:fixed; bottom:2rem; left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#0f172a; color:white;
+    padding:.95rem 1.6rem; border-radius:40px;
+    font-size:.88rem; font-weight:500;
+    box-shadow:0 20px 40px rgba(0,0,0,.25);
+    z-index:9999; opacity:0; transition:all .3s;
+    pointer-events:none; display:flex; align-items:center; gap:.6rem;
+    max-width:calc(100vw - 2rem);
+  }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .toast.error { background:#dc2626; }
+  .toast i { animation:pop .3s; }
+
+  .empty {
+    text-align:center; padding:4rem 2rem;
+    color:var(--text-muted); font-size:.92rem;
+  }
+  .empty i { font-size:2.5rem; margin-bottom:1rem; color:#cbd5e1; display:block; }
+
+  .btn.refreshing i { animation:rotateOnce .6s; }
+
+  /* ============ 导出 footer ============ */
+  .export-footer {
+    display:none;
+    padding:1.5rem 2rem;
+    border-top:2px solid #e2e8f0;
+    text-align:center; color:#64748b;
+    font-size:.78rem; line-height:1.7; background:#f8fafc;
+  }
+  .export-footer .copyright-name {
+    font-weight:700; color:#4f46e5; font-size:.88rem;
+    letter-spacing:.05em; margin-bottom:.3rem;
+  }
+  .export-footer .copyright-line {
+    display:flex; align-items:center; justify-content:center;
+    gap:1rem; flex-wrap:wrap;
+  }
+  .export-footer i { color:#8b5cf6; margin-right:.25rem; }
+
+  /* ============ 响应式 ============ */
+  @media (max-width:768px) {
+    .container { padding:1.25rem 1rem 3rem; }
+    .header { margin-bottom:1.5rem; gap:.9rem; }
+    .brand-logo { width:42px; height:42px; font-size:1.1rem; border-radius:12px; }
+    .brand-text h1 { font-size:1.15rem; }
+    .brand-text p { display:none; }
+    .header-actions { width:100%; gap:.5rem; }
+    .header-actions .btn { flex:1; justify-content:center; padding:0 .8rem; font-size:.8rem; }
+    .status-pill { display:none; }
+
+    /* 工具栏换行 */
+    .toolbar {
+      padding:1.15rem 1.25rem;
+      flex-direction:column; align-items:stretch; gap:1rem;
+    }
+    .toolbar-right { width:100%; }
+    .toolbar-right .btn { flex:1; justify-content:center; }
+
+    /* 筛选栏 */
+    .filter-row {
+      padding:.85rem 1.25rem;
+      flex-direction:column; align-items:stretch; gap:.65rem;
+    }
+    .filter-group { width:100%; }
+    .filter-label { display:none; }
+    .filter-tabs { width:100%; }
+    .filter-tab { flex:1; justify-content:center; }
+
+    /* 隐藏表格，显示卡片列表 */
+    .table-wrap { display:none; }
+    .mobile-list { display:flex; }
+
+    .modal { border-radius:16px; }
+    .modal-header { padding:1.25rem 1.35rem; }
+    .modal-body { padding:1.35rem; }
+    .modal-footer { padding:1.1rem 1.35rem; }
+
+    .toast { bottom:1.25rem; padding:.85rem 1.4rem; font-size:.84rem; }
+
+    .form-group { margin-bottom:1.2rem; }
+  }
+
+  @media (max-width:480px) {
+    .container { padding:1rem .85rem 2.5rem; }
+    .header-actions .btn span { display:none; }
+    .header-actions .btn { padding:0; width:42px; min-width:42px; }
+    .header-actions .btn i { margin:0; }
+
+    .student-card { padding:1rem; }
+    .student-card-name { font-size:.95rem; }
+    .student-card-actions .icon-btn { width:34px; height:34px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header class="header">
+    <div class="brand">
+      <div class="brand-logo"><i class="fas fa-clipboard-check"></i></div>
+      <div class="brand-text">
+        <h1>学生请假系统</h1>
+        <p>Student Leave Management</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <div class="status-pill">
+        <span id="connectionDot" class="status-dot status-offline"></span>
+        <span id="statusText">连接中...</span>
+      </div>
+      <button class="btn btn-outline btn-icon-only" id="refreshBtn" title="刷新">
+        <i class="fas fa-sync-alt"></i>
+      </button>
+      <button class="btn btn-success" id="exportBtn" title="导出图片">
+        <i class="fas fa-image"></i> <span>导出图片</span>
+      </button>
+      <a href="admin.html" class="btn btn-outline">
+        <i class="fas fa-shield-alt"></i> <span>后台</span>
+      </a>
+    </div>
+  </header>
+
+  <div class="main-card" id="studentCard">
+    <!-- 工具栏 -->
+    <div class="toolbar">
+      <div class="toolbar-title">
+        <i class="fas fa-list-ul"></i>
+        <span>请假记录</span>
+        <span class="toolbar-sub">共 <span id="totalStudentsCount">0</span> 人</span>
+      </div>
+      <div class="toolbar-right">
+        <button class="btn btn-primary" id="openApplyBtn">
+          <i class="fas fa-plus"></i> 申请请假 / 续假
+        </button>
+      </div>
+    </div>
+
+    <!-- 筛选栏 -->
+    <div class="filter-row">
+      <div class="filter-group">
+        <span class="filter-label">状态</span>
+        <div class="filter-tabs" id="filterTabs">
+          <button class="filter-tab active" data-filter="all">
+            全部 <span class="count" id="countAll">0</span>
+          </button>
+          <button class="filter-tab" data-filter="leave">
+            已请假 <span class="count" id="countLeave">0</span>
+          </button>
+          <button class="filter-tab" data-filter="noleave">
+            未请假 <span class="count" id="countNoLeave">0</span>
+          </button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <span class="filter-label">类型</span>
+        <div class="filter-tabs" id="typeTabs">
+          <button class="filter-tab type-tab active" data-type="all">
+            <i class="fas fa-users" style="font-size:.7rem;"></i> 全部
+          </button>
+          <button class="filter-tab type-tab" data-type="boarding">
+            <i class="fas fa-bed" style="font-size:.7rem;"></i> 住宿 <span class="count" id="countBoarding">0</span>
+          </button>
+          <button class="filter-tab type-tab" data-type="day">
+            <i class="fas fa-home" style="font-size:.7rem;"></i> 走读 <span class="count" id="countDay">0</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 导出头部 -->
+    <div style="display:none; padding:1.25rem 1.75rem; border-bottom:1px solid var(--border);" id="exportHeader">
+      <div style="font-size:1.1rem; font-weight:700; color:#0f172a;">学生请假记录表</div>
+      <div style="font-size:.78rem; color:#64748b; margin-top:.3rem;">
+        导出时间：<span id="exportTime"></span>
+      </div>
+    </div>
+
+    <!-- 桌面表格 -->
+    <div class="table-wrap" id="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>学生</th>
+            <th>请假次数</th>
+            <th>最近请假</th>
+            <th>待审核</th>
+            <th style="text-align:right;">操作</th>
+          </tr>
+        </thead>
+        <tbody id="studentsTbody">
+          <tr><td colspan="5" class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 移动端卡片列表 -->
+    <div class="mobile-list" id="mobileList">
+      <div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>
+    </div>
+
+    <!-- 导出 footer -->
+    <div class="export-footer" id="exportFooter">
+      <div class="copyright-name">学生请假管理系统</div>
+      <div class="copyright-line">
+        <span><i class="fas fa-copyright"></i>2025 Student Leave System. All Rights Reserved.</span>
+        <span><i class="fas fa-code"></i>Version 1.0.0</span>
+      </div>
+      <div style="margin-top:.35rem; font-size:.7rem; color:#94a3b8;">
+        本报表由系统自动生成 · 仅供内部使用
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 申请请假 Modal ============ -->
+<div class="modal-backdrop" id="applyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-pen"></i> 申请请假 / 续假</div>
+      <button class="close-btn" onclick="closeApplyModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="leaveForm">
+        <div class="form-group">
+          <label for="studentSelect">选择学生</label>
+          <select id="studentSelect" data-custom-select data-placeholder="— 请选择学生 —" required>
+            <option value="">— 请选择 —</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="leaveType">请假类型</label>
+          <select id="leaveType" data-custom-select data-placeholder="选择类型">
+            <option value="new">📋 新请假</option>
+            <option value="extend">⏳ 续假</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="leaveReason">请假原因 (可选)</label>
+          <div class="custom-input-wrap has-icon">
+            <i class="fas fa-comment-dots input-icon"></i>
+            <input type="text" id="leaveReason" class="custom-input" placeholder="如：病假、事假..." maxlength="50">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+          <i class="fas fa-paper-plane"></i> 提交申请
+        </button>
+        <div class="form-hint">
+          <i class="fas fa-info-circle"></i>
+          <span>提交后需管理员审核通过，才会计入正式请假次数。</span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 历史 Modal ============ -->
+<div class="modal-backdrop" id="historyModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-history"></i> <span id="historyTitle">请假历史</span></div>
+      <button class="close-btn" onclick="closeHistoryModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="historyBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeHistoryModal()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// ========== 自定义下拉 ==========
+class CustomSelect {
+  constructor(nativeSelect, options = {}) {
+    this.native = nativeSelect;
+    this.placeholder = options.placeholder || '请选择';
+    this.isOpen = false;
+    this.native.style.display = 'none';
+    this.wrapper = document.createElement('div');
+    this.wrapper.className = 'custom-select';
+    this.wrapper.tabIndex = 0;
+    this.trigger = document.createElement('div');
+    this.trigger.className = 'custom-select-trigger';
+    this.wrapper.appendChild(this.trigger);
+    this.panel = document.createElement('div');
+    this.panel.className = 'custom-select-panel';
+    this.wrapper.appendChild(this.panel);
+    this.native.parentNode.insertBefore(this.wrapper, this.native);
+    this.bindEvents();
+    this.refresh();
+  }
+  refresh() {
+    const selectedOpt = this.native.options[this.native.selectedIndex];
+    if (selectedOpt && selectedOpt.value !== '') {
+      this.trigger.textContent = selectedOpt.textContent;
+      this.trigger.classList.remove('placeholder');
+    } else {
+      this.trigger.textContent = this.placeholder;
+      this.trigger.classList.add('placeholder');
+    }
+    this.panel.innerHTML = '';
+    Array.from(this.native.options).forEach((opt, idx) => {
+      if (opt.value === '' && opt.disabled) return;
+      const item = document.createElement('div');
+      item.className = 'custom-select-option';
+      if (opt.value === this.native.value) item.classList.add('selected');
+      if (opt.disabled) item.classList.add('disabled');
+      item.dataset.value = opt.value;
+      item.textContent = opt.textContent;
+      item.addEventListener('click', () => {
+        if (opt.disabled) return;
+        this.selectValue(opt.value);
+        this.close();
+      });
+      this.panel.appendChild(item);
+    });
+  }
+  selectValue(value) {
+    this.native.value = value;
+    this.native.dispatchEvent(new Event('change', { bubbles: true }));
+    this.refresh();
+  }
+  open() {
+    if (this.isOpen) return;
+    document.querySelectorAll('.custom-select.open').forEach(el => {
+      if (el !== this.wrapper) el._customSelect?.close();
+    });
+    this.isOpen = true;
+    this.wrapper.classList.add('open');
+    const selected = this.panel.querySelector('.custom-select-option.selected');
+    if (selected) selected.scrollIntoView({ block: 'nearest' });
+  }
+  close() { this.isOpen = false; this.wrapper.classList.remove('open'); }
+  bindEvents() {
+    this.trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (this.isOpen) this.close(); else this.open();
+    });
+    document.addEventListener('click', (e) => {
+      if (!this.wrapper.contains(e.target)) this.close();
+    });
+    this.native.addEventListener('change', () => this.refresh());
+  }
+}
+function initCustomSelects() {
+  document.querySelectorAll('select[data-custom-select]').forEach(sel => {
+    if (!sel._customSelect) {
+      sel._customSelect = new CustomSelect(sel, {
+        placeholder: sel.dataset.placeholder || '请选择'
+      });
+    }
+  });
+}
+
+// ========== 业务逻辑 ==========
+const API_BASE = '/api';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+let allStudents = [];
+let currentFilter = 'all';
+let currentType = 'all';
+let isLoading = false;
+
+function showToast(msg, isError = false) {
+  const t = $('#toast');
+  t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${msg}</span>`;
+  t.classList.toggle('error', isError);
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+}
+
+async function apiRequest(path, options = {}) {
+  const res = await fetch(`${API_BASE}${path}`, {
+    headers: { 'Content-Type': 'application/json' }, ...options
+  });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); }
+  catch (e) { throw new Error(res.status === 404 ? `接口不存在` : `服务器异常 (${res.status})`); }
+  if (!res.ok || !data.success) throw new Error(data.message || `请求失败 (${res.status})`);
+  return data;
+}
+
+async function checkConnection() {
+  try {
+    await fetch(`${API_BASE}/health`);
+    $('#connectionDot').className = 'status-dot status-online';
+    $('#statusText').textContent = '已连接';
+  } catch {
+    $('#connectionDot').className = 'status-dot status-offline';
+    $('#statusText').textContent = '未连接';
+  }
+}
+
+function getPendingCount(student) {
+  return student.history.filter(h => h.status === 'pending').length;
+}
+function typeLabel(type) { return type === 'boarding' ? '住宿' : '走读'; }
+function typeIcon(type) { return type === 'boarding' ? 'fa-bed' : 'fa-home'; }
+function typeBadgeClass(type) { return type === 'boarding' ? 'badge-boarding' : 'badge-day'; }
+
+function animateNumber(el, target) {
+  if (!el) return;
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) { el.textContent = target; return; }
+  const steps = 12;
+  const step = (target - current) / steps;
+  let i = 0;
+  const timer = setInterval(() => {
+    i++;
+    if (i >= steps) { el.textContent = target; clearInterval(timer); return; }
+    el.textContent = Math.round(current + step * i);
+  }, 25);
+}
+
+function updateCounts() {
+  const total = allStudents.length;
+  const leaveCount = allStudents.filter(s => s.leaveCount > 0).length;
+  const noLeaveCount = total - leaveCount;
+  const boardingCount = allStudents.filter(s => s.type === 'boarding').length;
+  const dayCount = allStudents.filter(s => s.type === 'day').length;
+  animateNumber($('#countAll'), total);
+  animateNumber($('#countLeave'), leaveCount);
+  animateNumber($('#countNoLeave'), noLeaveCount);
+  animateNumber($('#countBoarding'), boardingCount);
+  animateNumber($('#countDay'), dayCount);
+  animateNumber($('#totalStudentsCount'), total);
+}
+
+function applyFilter() {
+  let filtered = allStudents;
+  if (currentType !== 'all') filtered = filtered.filter(s => s.type === currentType);
+  if (currentFilter === 'leave') filtered = filtered.filter(s => s.leaveCount > 0);
+  else if (currentFilter === 'noleave') filtered = filtered.filter(s => s.leaveCount === 0);
+  renderTable(filtered);
+  renderMobileList(filtered);
+}
+
+function renderTable(students) {
+  const tbody = $('#studentsTbody');
+  if (!students.length) {
+    tbody.innerHTML = `<tr><td colspan="5" class="empty"><i class="fas fa-inbox"></i>暂无学生数据</td></tr>`;
+    return;
+  }
+  let html = '';
+  students.forEach((s, idx) => {
+    const pending = getPendingCount(s);
+    const typeBadge = `<span class="badge ${typeBadgeClass(s.type)}"><i class="fas ${typeIcon(s.type)}"></i>${typeLabel(s.type)}</span>`;
+    const pendingBadge = pending > 0
+      ? `<span class="badge badge-pending"><i class="fas fa-clock"></i> ${pending}</span>`
+      : `<span style="color:var(--text-muted); font-size:.85rem;">—</span>`;
+    html += `<tr style="animation-delay:${Math.min(idx * 25, 250)}ms">
+      <td>
+        <div class="student-cell">
+          <span class="avatar">${s.name.charAt(0)}</span>
+          <div class="student-info">
+            <span class="student-name">${s.name}</span>
+            <span class="student-meta">
+              <span class="badge badge-class">${s.class || '—'}</span>
+              ${typeBadge}
+            </span>
+          </div>
+        </div>
+      </td>
+      <td><span class="badge badge-count">${s.leaveCount} 次</span></td>
+      <td style="color:var(--text-muted); font-size:.85rem;">${s.lastLeave || '—'}</td>
+      <td>${pendingBadge}</td>
+      <td>
+        <div class="row-actions">
+          <button class="icon-btn view-history" data-id="${s.id}" title="查看历史"><i class="fas fa-history"></i></button>
+          <button class="icon-btn quick-extend" data-id="${s.id}" title="快速续假"><i class="fas fa-clock"></i></button>
+        </div>
+      </td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  bindRowActions();
+}
+
+function renderMobileList(students) {
+  const list = $('#mobileList');
+  if (!students.length) {
+    list.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无学生数据</div>`;
+    return;
+  }
+  let html = '';
+  students.forEach((s, idx) => {
+    const pending = getPendingCount(s);
+    const typeBadge = `<span class="badge ${typeBadgeClass(s.type)}"><i class="fas ${typeIcon(s.type)}"></i>${typeLabel(s.type)}</span>`;
+    const pendingBadge = pending > 0
+      ? `<span class="badge badge-pending"><i class="fas fa-clock"></i> ${pending} 待审</span>`
+      : '';
+    html += `<div class="student-card" style="animation-delay:${Math.min(idx * 25, 250)}ms">
+      <div class="student-card-header">
+        <span class="avatar">${s.name.charAt(0)}</span>
+        <div class="student-card-info">
+          <div class="student-card-name">${s.name}</div>
+          <div class="student-card-tags">
+            <span class="badge badge-class">${s.class || '—'}</span>
+            ${typeBadge}
+            ${pendingBadge}
+          </div>
+        </div>
+      </div>
+      <div class="student-card-body">
+        <div class="student-card-stats">
+          <span><strong>${s.leaveCount}</strong> 次请假</span>
+          <span>${s.lastLeave || '—'}</span>
+        </div>
+        <div class="student-card-actions">
+          <button class="icon-btn view-history" data-id="${s.id}" title="历史"><i class="fas fa-history"></i></button>
+          <button class="icon-btn quick-extend" data-id="${s.id}" title="续假"><i class="fas fa-clock"></i></button>
+        </div>
+      </div>
+    </div>`;
+  });
+  list.innerHTML = html;
+  bindRowActions();
+}
+
+function bindRowActions() {
+  $$('.quick-extend').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const stu = allStudents.find(s => s.id === id);
+      if (!stu) return;
+      btn.disabled = true;
+      const old = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+      try {
+        await apiRequest('/leave', { method:'POST', body: JSON.stringify({ studentId:id, type:'extend', reason:'' }) });
+        showToast(`已为 ${stu.name} 提交续假，等待审核`);
+        await refreshAll(false);
+      } catch (e) { showToast(e.message, true); }
+      finally { btn.disabled = false; btn.innerHTML = old; }
+    });
+  });
+  $$('.view-history').forEach(btn => {
+    btn.addEventListener('click', () => openHistoryModal(btn.dataset.id));
+  });
+}
+
+function populateSelect(students) {
+  const sel = $('#studentSelect');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— 请选择 —</option>';
+  students.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    const pending = getPendingCount(s);
+    o.textContent = `${s.name}（${s.class} · ${typeLabel(s.type)} · 已通过${s.leaveCount}次${pending > 0 ? ` · 待审${pending}` : ''}）`;
+    sel.appendChild(o);
+  });
+  if (cur && students.some(s => s.id === cur)) sel.value = cur;
+  if (sel._customSelect) sel._customSelect.refresh();
+}
+
+async function refreshAll(showMsg = true) {
+  if (isLoading) return;
+  isLoading = true;
+  try {
+    const res = await apiRequest('/students');
+    allStudents = res.data;
+    updateCounts();
+    applyFilter();
+    populateSelect(allStudents);
+    if (showMsg) showToast('数据已刷新');
+  } catch (e) {
+    showToast(`加载失败: ${e.message}`, true);
+  } finally {
+    isLoading = false;
+  }
+}
+
+// ============ Modal 控制 ============
+function openApplyModal() {
+  $('#applyModal').classList.add('show');
+  setTimeout(() => {
+    const sel = $('#studentSelect');
+    if (sel._customSelect) sel._customSelect.open();
+  }, 200);
+}
+function closeApplyModal() { $('#applyModal').classList.remove('show'); }
+
+async function openHistoryModal(studentId) {
+  const stu = allStudents.find(s => s.id === studentId);
+  if (!stu) return;
+  $('#historyTitle').textContent = `${stu.name} · ${typeLabel(stu.type)}生 · 请假历史`;
+  const body = $('#historyBody');
+  body.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>';
+  $('#historyModal').classList.add('show');
+  try {
+    const res = await apiRequest(`/students/${studentId}/history`);
+    const list = res.data;
+    if (!list.length) {
+      body.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无请假记录</div>`;
+      return;
+    }
+    let html = '<div class="timeline">';
+    list.forEach(h => {
+      const typeText = h.type === 'extend' ? '续假' : '新请假';
+      const dotClass = h.type === 'extend' ? 'extend' : 'new';
+      const dotIcon = h.type === 'extend' ? 'fa-clock' : 'fa-file-medical';
+      let statusBadge = '';
+      if (h.status === 'approved') statusBadge = '<span class="badge badge-approved"><i class="fas fa-check"></i> 已通过</span>';
+      else if (h.status === 'rejected') statusBadge = '<span class="badge badge-rejected"><i class="fas fa-times"></i> 已驳回</span>';
+      else statusBadge = '<span class="badge badge-pending"><i class="fas fa-clock"></i> 待审核</span>';
+      html += `
+        <div class="history-item">
+          <div class="history-dot ${dotClass}"><i class="fas ${dotIcon}"></i></div>
+          <div class="history-content">
+            <div class="history-head">
+              <span class="history-date">${h.date}</span>
+              <span class="badge ${h.type === 'extend' ? 'badge-yellow' : 'badge-count'}">${typeText}</span>
+              ${statusBadge}
+            </div>
+            <div class="history-reason">${h.reason || '—'}</div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+    body.innerHTML = html;
+  } catch (e) {
+    body.innerHTML = `<div class="empty"><i class="fas fa-exclamation-triangle"></i>${e.message}</div>`;
+  }
+}
+function closeHistoryModal() { $('#historyModal').classList.remove('show'); }
+
+// ============ 提交请假 ============
+async function handleSubmit(e) {
+  e.preventDefault();
+  const studentId = $('#studentSelect').value;
+  const type = $('#leaveType').value;
+  const reason = $('#leaveReason').value.trim();
+  if (!studentId) return showToast('请先选择学生', true);
+
+  const btn = $('#submitBtn');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+  try {
+    await apiRequest('/leave', {
+      method:'POST',
+      body: JSON.stringify({ studentId, type, reason })
+    });
+    showToast('已提交，等待管理员审核');
+    $('#leaveReason').value = '';
+    closeApplyModal();
+    await refreshAll(false);
+  } catch (e) { showToast(e.message, true); }
+  finally { btn.disabled = false; btn.innerHTML = old; }
+}
+
+// ============ 导出 ============
+async function exportAsImage() {
+  const btn = $('#exportBtn');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>生成中...</span>';
+
+  const target = $('#studentCard');
+  const exportHeader = $('#exportHeader');
+  const exportFooter = $('#exportFooter');
+  const mobileList = $('#mobileList');
+  const tableWrap = $('#tableWrap');
+
+  try {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    $('#exportTime').textContent = timeStr;
+    exportHeader.style.display = 'block';
+    exportFooter.style.display = 'block';
+
+    // 导出时强制显示表格，隐藏移动端卡片
+    const mobileDisplay = mobileList.style.display;
+    const tableDisplay = tableWrap.style.display;
+    mobileList.style.display = 'none';
+    tableWrap.style.display = 'block';
+
+    const actionCells = tableWrap.querySelectorAll('th:last-child, td:last-child');
+    const hiddenCells = [];
+    actionCells.forEach(cell => { hiddenCells.push({ el: cell, display: cell.style.display }); cell.style.display = 'none'; });
+
+    const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
+
+    hiddenCells.forEach(item => { item.el.style.display = item.display; });
+    exportHeader.style.display = 'none';
+    exportFooter.style.display = 'none';
+    mobileList.style.display = mobileDisplay;
+    tableWrap.style.display = tableDisplay;
+
+    const link = document.createElement('a');
+    link.download = `学生请假记录_${timeStr.replace(/[:\s]/g, '-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('图片已导出');
+  } catch (e) {
+    console.error(e);
+    showToast('导出失败: ' + e.message, true);
+    exportHeader.style.display = 'none';
+    exportFooter.style.display = 'none';
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = old;
+  }
+}
+
+async function handleRefresh() {
+  const btn = $('#refreshBtn');
+  if (btn.classList.contains('refreshing')) return;
+  btn.classList.add('refreshing');
+  btn.disabled = true;
+  try {
+    await refreshAll(false);
+    await checkConnection();
+    showToast('数据已刷新');
+  } finally {
+    setTimeout(() => {
+      btn.classList.remove('refreshing');
+      btn.disabled = false;
+    }, 600);
+  }
+}
+
+// ============ 初始化 ============
+async function init() {
+  initCustomSelects();
+  await checkConnection();
+  await refreshAll(false);
+
+  $('#openApplyBtn').addEventListener('click', openApplyModal);
+  $('#leaveForm').addEventListener('submit', handleSubmit);
+  $('#exportBtn').addEventListener('click', exportAsImage);
+  $('#refreshBtn').addEventListener('click', handleRefresh);
+
+  $$('#filterTabs .filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('#filterTabs .filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      applyFilter();
+    });
+  });
+  $$('#typeTabs .filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      $$('#typeTabs .filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentType = tab.dataset.type;
+      applyFilter();
+    });
+  });
+
+  // 关闭 modal（点空白）
+  $('#applyModal').addEventListener('click', e => {
+    if (e.target === $('#applyModal')) closeApplyModal();
+  });
+  $('#historyModal').addEventListener('click', e => {
+    if (e.target === $('#historyModal')) closeHistoryModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeApplyModal(); closeHistoryModal(); }
+  });
+
+  setInterval(checkConnection, 30000);
+}
+init();
+</script>
+</body>
+</html>

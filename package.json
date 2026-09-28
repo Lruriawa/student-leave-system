@@ -1,0 +1,10 @@
+{
+  "name": "student-leave-system",
+  "version": "1.0.0",
+  "description": "简约的学生请假管理系统",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "install-all": "cd backend && npm install"
+  },
+  "license": "MIT"
+}
