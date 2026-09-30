@@ -3,646 +3,559 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
-<meta name="theme-color" content="#4f46e5">
-<title>学生请假系统</title>
+<meta name="theme-color" content="#2563eb">
+<link rel="icon" type="image/png" href="./tx.png">
+<title>班级考勤系统 · 天津市槐序网络科技工作室</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
   :root {
-    --primary:#4f46e5; --primary-hover:#4338ca; --primary-light:rgba(79,70,229,.1);
-    --bg:#f8fafc; --card:#ffffff;
-    --text:#0f172a; --text-muted:#64748b;
-    --border:#e2e8f0;
-    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
-    --shadow-md:0 4px 12px rgba(15,23,42,.06);
-    --shadow-lg:0 12px 32px rgba(15,23,42,.1);
-    --green:#16a34a; --yellow:#d97706; --red:#dc2626;
+    --primary:#2563eb; --primary-hover:#1d4ed8; --primary-light:#eff6ff;
+    --bg:#f5f7fa; --card:#ffffff;
+    --text:#1f2937; --text-secondary:#4b5563; --text-muted:#9ca3af;
+    --border:#e5e7eb; --border-hover:#d1d5db;
+    --green:#16a34a; --green-light:#f0fdf4;
+    --orange:#ea580c; --orange-light:#fff7ed;
+    --red:#dc2626; --red-light:#fef2f2;
+    --yellow:#d97706; --yellow-light:#fffbeb;
   }
-  html { scroll-behavior:smooth; }
+  html { -webkit-font-smoothing:antialiased; }
   body {
-    background:var(--bg); font-family:'Inter',system-ui,-apple-system,sans-serif;
-    color:var(--text); line-height:1.6; min-height:100vh;
-    background-image:radial-gradient(circle at 0% 0%, rgba(79,70,229,.06) 0%, transparent 50%), radial-gradient(circle at 100% 0%, rgba(139,92,246,.05) 0%, transparent 50%);
-    background-attachment:fixed;
+    background:var(--bg);
+    font-family:'Inter',-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei',sans-serif;
+    color:var(--text); line-height:1.5; min-height:100vh; font-size:14px;
   }
-  .container { max-width:1200px; margin:0 auto; padding:2.5rem 2rem 4rem; }
-
-  @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
   @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
-  @keyframes pop { 0% { transform:scale(.9); opacity:0; } 100% { transform:scale(1); opacity:1; } }
-  @keyframes rotateOnce { from { transform:rotate(0); } to { transform:rotate(360deg); } }
-  @keyframes pulseGlow { 0%, 100% { box-shadow:0 0 0 0 rgba(34,197,94,.4); } 50% { box-shadow:0 0 0 8px rgba(34,197,94,0); } }
+  @keyframes fadeInUp { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes modalIn { 0% { opacity:0; transform:scale(.92) translateY(20px); } 60% { opacity:1; transform:scale(1.02) translateY(-2px); } 100% { opacity:1; transform:scale(1) translateY(0); } }
+  @keyframes backdropIn { from { opacity:0; } to { opacity:1; } }
+  @keyframes modalOut { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(.94); } }
+  @keyframes backdropOut { from { opacity:1; } to { opacity:0; } }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  @keyframes skeleton { 0% { background-position:-200% 0; } 100% { background-position:200% 0; } }
+  @keyframes ripple { to { transform:scale(4); opacity:0; } }
+  @keyframes toastIn { 0% { opacity:0; transform:translateX(-50%) translateY(20px) scale(.9); } 60% { opacity:1; transform:translateX(-50%) translateY(-2px) scale(1.02); } 100% { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } }
+  @keyframes toastOut { from { opacity:1; transform:translateX(-50%) translateY(0) scale(1); } to { opacity:0; transform:translateX(-50%) translateY(10px) scale(.95); } }
+  @keyframes progressSlide { 0% { left:-30%; width:30%; } 50% { left:30%; width:50%; } 100% { left:100%; width:30%; } }
+  @keyframes dotBounce { 0%, 80%, 100% { transform:scale(0); opacity:.5; } 40% { transform:scale(1); opacity:1; } }
 
-  /* ============ Header ============ */
-  .header {
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom:2rem; flex-wrap:wrap; gap:1rem;
-    animation:fadeInUp .5s cubic-bezier(.22,1,.36,1) both;
-  }
-  .brand { display:flex; align-items:center; gap:1rem; }
-  .brand-logo {
-    width:48px; height:48px; border-radius:14px;
-    background:linear-gradient(135deg, var(--primary), #8b5cf6);
-    display:flex; align-items:center; justify-content:center;
-    color:white; font-size:1.25rem;
-    box-shadow:0 8px 20px rgba(79,70,229,.25);
-    flex-shrink:0;
-  }
-  .brand-text h1 { font-size:1.4rem; font-weight:700; letter-spacing:-.02em; line-height:1.25; }
-  .brand-text p { font-size:.82rem; color:var(--text-muted); margin-top:.1rem; }
+  .page-progress { position:fixed; top:0; left:0; right:0; height:2px; z-index:9999; pointer-events:none; opacity:0; transition:opacity .2s; }
+  .page-progress.active { opacity:1; }
+  .page-progress::before { content:''; position:absolute; top:0; height:100%; background:linear-gradient(90deg, transparent, var(--primary), transparent); animation:progressSlide 1.2s ease-in-out infinite; }
 
-  .header-actions { display:flex; gap:.6rem; align-items:center; flex-wrap:wrap; }
+  .global-loading { position:fixed; inset:0; z-index:9000; background:rgba(255,255,255,.75); -webkit-backdrop-filter:blur(2px); backdrop-filter:blur(2px); display:none; align-items:center; justify-content:center; flex-direction:column; gap:16px; opacity:0; transition:opacity .2s; }
+  .global-loading.show { display:flex; opacity:1; }
+  .global-loading .spinner { width:40px; height:40px; border-radius:50%; border:3px solid var(--primary-light); border-top-color:var(--primary); animation:spin .8s linear infinite; }
+  .global-loading .loading-text { font-size:13px; color:var(--text-secondary); font-weight:500; }
 
-  .status-pill {
-    display:flex; align-items:center; gap:.5rem;
-    padding:.5rem 1rem; border-radius:40px;
-    background:var(--card); border:1px solid var(--border);
-    font-size:.8rem; color:var(--text-muted);
-    box-shadow:var(--shadow-sm);
-    height:42px;
-  }
-  .status-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-  .status-online { background:#22c55e; animation:pulseGlow 2.5s infinite; }
-  .status-offline { background:#ef4444; }
+  .skeleton { background:linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 37%, #f1f5f9 63%); background-size:200% 100%; animation:skeleton 1.4s ease-in-out infinite; border-radius:4px; height:14px; }
+  .skeleton-avatar { width:32px; height:32px; border-radius:50%; }
 
-  .btn {
-    display:inline-flex; align-items:center; gap:.5rem;
-    padding:0 1.15rem; height:42px;
-    border-radius:40px;
-    font-family:inherit; font-size:.86rem; font-weight:500;
-    cursor:pointer; border:none; text-decoration:none;
-    transition:all .2s cubic-bezier(.22,1,.36,1);
-    white-space:nowrap;
-  }
-  .btn i { transition:transform .2s; }
-  .btn:hover i.fa-sync-alt { transform:rotate(180deg); }
-  .btn:hover i.fa-image { transform:scale(1.15); }
-  .btn-primary { background:var(--primary); color:white; box-shadow:0 4px 12px rgba(79,70,229,.25); }
-  .btn-primary:hover { background:var(--primary-hover); transform:translateY(-2px); box-shadow:0 8px 20px rgba(79,70,229,.35); }
-  .btn-primary:disabled { background:#94a3b8; box-shadow:none; transform:none; cursor:not-allowed; }
-  .btn-outline { background:var(--card); color:var(--text); border:1px solid var(--border); }
-  .btn-outline:hover { border-color:var(--primary); color:var(--primary); transform:translateY(-2px); }
-  .btn-success { background:var(--green); color:white; box-shadow:0 4px 12px rgba(22,163,74,.25); }
-  .btn-success:hover { background:#15803d; transform:translateY(-2px); box-shadow:0 8px 20px rgba(22,163,74,.35); }
-  .btn-success:disabled { background:#94a3b8; cursor:not-allowed; transform:none; box-shadow:none; }
-  .btn-icon-only { padding:0; width:42px; justify-content:center; }
+  .dots-loading { display:inline-flex; align-items:center; gap:4px; }
+  .dots-loading span { width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.7; animation:dotBounce 1.2s infinite ease-in-out; }
+  .dots-loading span:nth-child(2) { animation-delay:.15s; }
+  .dots-loading span:nth-child(3) { animation-delay:.3s; }
 
-  /* ============ 主卡片 ============ */
-  .main-card {
-    background:var(--card); border-radius:24px;
-    border:1px solid var(--border);
-    box-shadow:var(--shadow-md);
-    overflow:hidden;
-    animation:fadeInUp .55s cubic-bezier(.22,1,.36,1) both;
-  }
+  .tab-content { animation:fadeInUp .3s cubic-bezier(.22,1,.36,1) both; }
+  .stagger-item { animation:fadeInUp .35s cubic-bezier(.22,1,.36,1) both; }
 
-  /* ============ 工具栏 ============ */
-  .toolbar {
-    padding:1.5rem 2rem;
-    display:flex; align-items:center; justify-content:space-between;
-    gap:1.25rem; flex-wrap:wrap;
-    border-bottom:1px solid var(--border);
-  }
-  .toolbar-title {
-    display:flex; align-items:center; gap:.65rem;
-    font-size:1.05rem; font-weight:600;
-  }
-  .toolbar-title i {
-    width:34px; height:34px; border-radius:10px;
-    background:var(--primary-light); color:var(--primary);
-    display:inline-flex; align-items:center; justify-content:center;
-    font-size:.85rem;
-  }
-  .toolbar-sub { font-size:.82rem; color:var(--text-muted); font-weight:400; margin-left:.2rem; }
+  .topbar { background:#fff; border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+  .topbar-inner { max-width:1400px; margin:0 auto; padding:0 24px; height:56px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .brand { display:flex; align-items:center; gap:10px; }
+  .brand-logo { width:32px; height:32px; border-radius:6px; background:var(--primary); color:#fff; display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:600; transition:transform .3s cubic-bezier(.34,1.4,.64,1); }
+  .brand:hover .brand-logo { transform:rotate(-6deg) scale(1.05); }
+  .brand-name { font-size:15px; font-weight:600; }
+  .brand-tag { font-size:11px; color:var(--text-muted); padding:2px 6px; background:var(--bg); border-radius:4px; }
+  .topbar-right { display:flex; align-items:center; gap:8px; }
 
-  .toolbar-right { display:flex; align-items:center; gap:.75rem; flex-wrap:wrap; }
+  .conn { display:flex; align-items:center; gap:6px; font-size:12px; color:var(--text-secondary); padding:4px 10px; border-radius:6px; background:var(--bg); }
+  .conn-dot { width:6px; height:6px; border-radius:50%; transition:all .3s; }
+  .conn-on { background:var(--green); box-shadow:0 0 0 3px rgba(22,163,74,.15); }
+  .conn-off { background:var(--red); }
 
-  /* ============ 筛选栏 ============ */
-  .filter-row {
-    padding:1rem 2rem;
-    display:flex; align-items:center; justify-content:space-between;
-    gap:1rem; flex-wrap:wrap;
-    background:#fafbfc;
-    border-bottom:1px solid var(--border);
-  }
-  .filter-group { display:flex; align-items:center; gap:.5rem; flex-wrap:wrap; }
-  .filter-label { font-size:.78rem; color:var(--text-muted); font-weight:500; margin-right:.25rem; }
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; height:32px; border-radius:6px; border:1px solid var(--border); background:#fff; color:var(--text-secondary); font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; text-decoration:none; transition:all .18s cubic-bezier(.22,1,.36,1); white-space:nowrap; position:relative; overflow:hidden; }
+  .btn:hover { border-color:var(--border-hover); background:#f9fafb; color:var(--text); transform:translateY(-1px); }
+  .btn:active { transform:scale(.97) translateY(0); }
+  .btn-primary { background:var(--primary); border-color:var(--primary); color:#fff; }
+  .btn-primary:hover { background:var(--primary-hover); border-color:var(--primary-hover); color:#fff; box-shadow:0 4px 10px rgba(37,99,235,.25); }
+  .btn-success { background:var(--green); border-color:var(--green); color:#fff; }
+  .btn-success:hover { background:#15803d; border-color:#15803d; color:#fff; box-shadow:0 4px 10px rgba(22,163,74,.25); }
+  .btn-orange { background:var(--orange); border-color:var(--orange); color:#fff; }
+  .btn-orange:hover { background:#c2410c; border-color:#c2410c; color:#fff; box-shadow:0 4px 10px rgba(234,88,12,.25); }
+  .btn-danger { background:var(--red); border-color:var(--red); color:#fff; }
+  .btn-icon { padding:0; width:32px; justify-content:center; }
+  .btn-sm { height:28px; padding:4px 10px; font-size:12px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; transform:none !important; }
+  .btn .ripple { position:absolute; border-radius:50%; background:rgba(255,255,255,.5); transform:scale(0); animation:ripple .6s linear; pointer-events:none; }
+  .btn-outline .ripple { background:rgba(37,99,235,.2); }
 
-  .filter-tabs { display:inline-flex; background:#eef2f7; border-radius:40px; padding:3px; gap:2px; }
-  .filter-tab {
-    padding:.4rem .95rem; border-radius:30px;
-    font-size:.78rem; font-weight:500; cursor:pointer;
-    color:var(--text-muted); border:none; background:transparent;
-    font-family:inherit;
-    transition:all .2s cubic-bezier(.22,1,.36,1);
-    display:inline-flex; align-items:center; gap:.4rem;
-    white-space:nowrap;
-  }
-  .filter-tab:hover { color:var(--text); }
-  .filter-tab.active { background:white; color:var(--primary); box-shadow:0 2px 6px rgba(15,23,42,.08); }
-  .filter-tab .count {
-    background:rgba(79,70,229,.12); color:var(--primary);
-    font-size:.68rem; padding:.05rem .4rem; border-radius:20px; font-weight:600;
-  }
-  .filter-tab.active .count { background:var(--primary); color:white; }
-  .filter-tab.type-tab.active { background:#ede9fe; color:#7c3aed; }
-  .filter-tab.type-tab.active .count { background:#8b5cf6; color:white; }
+  .main { max-width:1400px; width:100%; margin:0 auto; padding:20px 24px 100px; }
 
-  /* ============ 表格 ============ */
-  .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-  table { width:100%; border-collapse:collapse; font-size:.9rem; }
-  thead th {
-    text-align:left; padding:1rem 1.5rem;
-    background:#fafbfc; font-weight:600; color:var(--text-muted);
-    font-size:.72rem; text-transform:uppercase; letter-spacing:.05em;
-    border-bottom:1px solid var(--border); white-space:nowrap;
-  }
-  tbody td {
-    padding:1.1rem 1.5rem;
-    border-bottom:1px solid #f1f5f9;
-    vertical-align:middle;
-  }
+  .main-tabs { display:flex; gap:0; border-bottom:1px solid var(--border); margin-bottom:16px; overflow-x:auto; scrollbar-width:none; }
+  .main-tabs::-webkit-scrollbar { display:none; }
+  .main-tab { padding:10px 16px; background:transparent; border:none; font-family:inherit; font-size:13px; font-weight:500; color:var(--text-secondary); cursor:pointer; border-bottom:2px solid transparent; transition:all .2s cubic-bezier(.22,1,.36,1); white-space:nowrap; display:inline-flex; align-items:center; gap:6px; margin-bottom:-1px; }
+  .main-tab:hover { color:var(--text); }
+  .main-tab.active { color:var(--primary); border-bottom-color:var(--primary); }
+  .main-tab i { transition:transform .2s; }
+  .main-tab.active i { transform:scale(1.15); }
+  .main-tab .count { background:var(--bg); color:var(--text-secondary); font-size:11px; padding:1px 6px; border-radius:8px; font-weight:600; transition:all .2s; }
+  .main-tab.active .count { background:var(--primary-light); color:var(--primary); }
+
+  .card { background:#fff; border:1px solid var(--border); border-radius:8px; margin-bottom:16px; overflow:hidden; animation:fadeInUp .4s cubic-bezier(.22,1,.36,1) both; animation-delay:.05s; }
+  .card:hover { box-shadow:0 2px 8px rgba(0,0,0,.04); }
+  .card-head { padding:14px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .card-title { font-size:14px; font-weight:600; display:flex; align-items:center; gap:8px; }
+  .card-title i { color:var(--text-secondary); font-size:13px; }
+
+  .filterbar { padding:12px 20px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; border-bottom:1px solid var(--border); background:#fafbfc; }
+  .filter-group { display:flex; align-items:center; gap:8px; }
+  .filter-label { font-size:12px; color:var(--text-muted); }
+  .seg { display:inline-flex; background:var(--bg); border-radius:6px; padding:2px; gap:2px; }
+  .seg-btn { padding:5px 12px; background:transparent; border:none; font-family:inherit; font-size:12px; font-weight:500; color:var(--text-secondary); cursor:pointer; border-radius:4px; transition:all .2s cubic-bezier(.22,1,.36,1); white-space:nowrap; }
+  .seg-btn:hover { color:var(--text); }
+  .seg-btn.active { background:#fff; color:var(--primary); box-shadow:0 1px 2px rgba(0,0,0,.05); }
+  .seg-btn .count { font-size:11px; color:var(--text-muted); margin-left:2px; }
+  .seg-btn.active .count { color:var(--primary); }
+
+  .table-wrap { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  thead th { text-align:left; padding:10px 20px; background:#fafbfc; font-weight:500; color:var(--text-muted); font-size:12px; letter-spacing:.02em; border-bottom:1px solid var(--border); white-space:nowrap; }
+  tbody td { padding:14px 20px; border-bottom:1px solid var(--border); vertical-align:middle; }
   tbody tr:last-child td { border-bottom:none; }
-  tbody tr { transition:background .15s; }
-  tbody tr:hover { background:#fafbfc; }
+  tbody tr { transition:background .15s, transform .15s; }
+  tbody tr:hover { background:#fafbfc; transform:translateX(2px); }
 
-  .student-cell { display:flex; align-items:center; gap:.85rem; }
-  .avatar {
-    width:38px; height:38px; border-radius:50%;
-    background:linear-gradient(135deg, var(--primary), #8b5cf6);
-    display:inline-flex; align-items:center; justify-content:center;
-    color:white; font-weight:600; font-size:.85rem; flex-shrink:0;
-  }
-  .student-info { display:flex; flex-direction:column; gap:.15rem; min-width:0; }
-  .student-name { font-weight:500; font-size:.92rem; }
-  .student-meta { font-size:.75rem; color:var(--text-muted); display:flex; align-items:center; gap:.4rem; flex-wrap:wrap; }
+  .stu-cell { display:flex; align-items:center; gap:10px; }
+  .avatar { width:32px; height:32px; border-radius:50%; background:var(--primary-light); color:var(--primary); display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:600; flex-shrink:0; transition:transform .2s; }
+  tr:hover .avatar { transform:scale(1.08); }
+  .avatar-orange { background:var(--orange-light); color:var(--orange); }
+  .stu-name { font-weight:500; font-size:13px; }
+  .stu-meta { font-size:11px; color:var(--text-muted); margin-top:1px; }
 
-  .badge {
-    display:inline-block; padding:.25rem .7rem; border-radius:30px;
-    font-size:.72rem; font-weight:600; white-space:nowrap; line-height:1.4;
-  }
-  .badge i { margin-right:.25rem; }
-  .badge-count { background:var(--primary-light); color:var(--primary); }
-  .badge-class { background:#f1f5f9; color:#475569; font-weight:500; }
-  .badge-pending { background:#fef3c7; color:#d97706; }
-  .badge-approved { background:#dcfce7; color:#16a34a; }
-  .badge-rejected { background:#fee2e2; color:#dc2626; }
-  .badge-boarding { background:#dbeafe; color:#2563eb; }
-  .badge-day { background:#fef3c7; color:#b45309; }
+  .tag { display:inline-flex; align-items:center; gap:3px; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:500; white-space:nowrap; }
+  .tag i { font-size:10px; }
+  .tag-blue { background:var(--primary-light); color:var(--primary); }
+  .tag-gray { background:var(--bg); color:var(--text-secondary); }
+  .tag-green { background:var(--green-light); color:var(--green); }
+  .tag-orange { background:var(--orange-light); color:var(--orange); }
+  .tag-red { background:var(--red-light); color:var(--red); }
+  .tag-yellow { background:var(--yellow-light); color:var(--yellow); }
+  .tag-boarding { background:#eff6ff; color:#2563eb; }
+  .tag-day { background:#fffbeb; color:#b45309; }
 
-  .row-actions { display:flex; gap:.35rem; justify-content:flex-end; }
-  .icon-btn {
-    width:36px; height:36px; border-radius:10px;
-    border:none; background:transparent; color:var(--text-muted);
-    cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
-    transition:all .2s; font-size:.92rem;
-  }
-  .icon-btn:hover { background:var(--primary-light); color:var(--primary); transform:scale(1.08); }
-  .icon-btn:active { transform:scale(.95); }
-  .icon-btn:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .row-actions { display:flex; gap:4px; justify-content:flex-end; }
+  .action-btn { width:28px; height:28px; border-radius:4px; border:1px solid transparent; background:transparent; color:var(--text-muted); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-size:13px; transition:all .18s cubic-bezier(.22,1,.36,1); }
+  .action-btn:hover { background:var(--bg); color:var(--text); border-color:var(--border); transform:scale(1.1); }
+  .action-btn:disabled { opacity:.3; cursor:not-allowed; }
+  .action-btn:disabled:hover { background:transparent; color:var(--text-muted); border-color:transparent; transform:none; }
 
-  /* ============ 移动端卡片列表 ============ */
-  .mobile-list { display:none; padding:1rem 1.25rem 1.5rem; gap:.85rem; flex-direction:column; }
-  .student-card {
-    background:#fff; border:1px solid var(--border); border-radius:16px;
-    padding:1.1rem 1.15rem;
-    transition:all .2s; animation:fadeInUp .3s both;
-  }
-  .student-card:active { transform:scale(.99); }
-  .student-card-header { display:flex; align-items:flex-start; gap:.85rem; margin-bottom:.85rem; }
-  .student-card-info { flex:1; min-width:0; }
-  .student-card-name { font-weight:600; font-size:1rem; margin-bottom:.35rem; }
-  .student-card-tags { display:flex; gap:.4rem; flex-wrap:wrap; }
-  .student-card-body {
-    display:flex; align-items:center; justify-content:space-between;
-    gap:.85rem; padding-top:.85rem;
-    border-top:1px dashed #f1f5f9;
-  }
-  .student-card-stats { display:flex; align-items:center; gap:.85rem; font-size:.78rem; color:var(--text-muted); }
-  .student-card-stats strong { color:var(--text); font-weight:600; }
-  .student-card-actions { display:flex; gap:.4rem; }
+  .mobile-list { display:none; padding:12px; gap:8px; flex-direction:column; }
+  .stu-card { background:#fff; border:1px solid var(--border); border-radius:8px; padding:14px 16px; transition:box-shadow .2s; }
+  .stu-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.05); }
+  .stu-card-head { display:flex; align-items:flex-start; gap:10px; margin-bottom:10px; }
+  .stu-card-info { flex:1; min-width:0; }
+  .stu-card-name { font-weight:600; font-size:14px; margin-bottom:6px; }
+  .stu-card-tags { display:flex; gap:4px; flex-wrap:wrap; }
+  .stu-card-body { display:flex; align-items:center; justify-content:space-between; gap:8px; padding-top:10px; border-top:1px solid var(--border); }
+  .stu-card-stats { display:flex; gap:12px; font-size:12px; color:var(--text-muted); }
+  .stu-card-stats strong { color:var(--text); font-weight:600; }
+  .stu-card-actions { display:flex; gap:4px; }
 
-  /* ============ 自定义输入框 ============ */
-  .custom-input-wrap { position:relative; width:100%; }
-  .custom-input {
-    width:100%; padding:.8rem 1.1rem;
-    border:1.5px solid var(--border); border-radius:12px;
-    background:#fff; color:var(--text);
-    font-family:inherit; font-size:.9rem; line-height:1.5;
-    transition:all .2s; -webkit-appearance:none; appearance:none; outline:none;
-    min-height:46px;
-  }
-  .custom-input::placeholder { color:var(--text-muted); opacity:.7; }
-  .custom-input:hover:not(:focus) { border-color:#cbd5e1; }
-  .custom-input:focus {
-    border-color:var(--primary);
-    box-shadow:0 0 0 4px rgba(79,70,229,.12);
-  }
-  .custom-input-wrap.has-icon .custom-input { padding-left:2.75rem; }
-  .custom-input-wrap.has-icon .input-icon {
-    position:absolute; left:1rem; top:50%; transform:translateY(-50%);
-    color:var(--text-muted); font-size:.9rem;
-    pointer-events:none; transition:color .2s;
-  }
-  .custom-input-wrap.has-icon:focus-within .input-icon { color:var(--primary); }
+  .field { margin-bottom:16px; }
+  .field-label { display:block; font-size:12px; font-weight:500; color:var(--text-secondary); margin-bottom:6px; }
+  .input-wrap { position:relative; }
+  .input { width:100%; padding:8px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; color:var(--text); font-family:inherit; font-size:13px; transition:all .18s cubic-bezier(.22,1,.36,1); outline:none; min-height:36px; }
+  .input::placeholder { color:var(--text-muted); }
+  .input:hover { border-color:var(--border-hover); }
+  .input:focus { border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+  .input-wrap.has-icon .input { padding-left:34px; }
+  .input-wrap.has-icon .input-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:12px; pointer-events:none; transition:color .2s; }
+  .input-wrap.has-icon:focus-within .input-icon { color:var(--primary); }
 
-  /* ============ 自定义下拉 ============ */
-  .custom-select { position:relative; width:100%; user-select:none; outline:none; }
-  .custom-select-trigger {
-    width:100%; padding:.8rem 2.5rem .8rem 1.1rem;
-    border:1.5px solid var(--border); border-radius:12px;
-    background:#fff; color:var(--text); font-size:.9rem;
-    cursor:pointer; transition:all .2s;
-    position:relative; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    min-height:46px; display:flex; align-items:center;
-  }
-  .custom-select-trigger::after {
-    content:''; position:absolute; right:1.1rem; top:50%;
-    width:7px; height:7px;
-    border-right:2px solid var(--text-muted); border-bottom:2px solid var(--text-muted);
-    transform:translateY(-70%) rotate(45deg);
-    transition:transform .25s; pointer-events:none;
-  }
-  .custom-select.open .custom-select-trigger {
-    border-color:var(--primary);
-    box-shadow:0 0 0 4px rgba(79,70,229,.12);
-  }
-  .custom-select.open .custom-select-trigger::after {
-    transform:translateY(-30%) rotate(225deg); border-color:var(--primary);
-  }
-  .custom-select-trigger.placeholder { color:var(--text-muted); }
-  .custom-select-panel {
-    position:absolute; top:calc(100% + 6px); left:0; right:0;
-    background:#fff; border:1px solid var(--border); border-radius:12px;
-    box-shadow:0 12px 32px rgba(15,23,42,.15);
-    z-index:100; max-height:260px; overflow-y:auto;
-    opacity:0; transform:translateY(-6px) scale(.98);
-    pointer-events:none; transition:all .2s;
-    padding:4px;
-  }
-  .custom-select.open .custom-select-panel {
-    opacity:1; transform:translateY(0) scale(1); pointer-events:auto;
-  }
-  .custom-select-option {
-    padding:.7rem .9rem; border-radius:8px;
-    font-size:.88rem; color:var(--text); cursor:pointer;
-    transition:background .15s; display:flex; align-items:center; gap:.5rem;
-  }
-  .custom-select-option:hover,
-  .custom-select-option.highlight { background:var(--primary-light); color:var(--primary); }
-  .custom-select-option.selected {
-    background:var(--primary-light); color:var(--primary); font-weight:600;
-  }
-  .custom-select-option.selected::before {
-    content:'\f00c'; font-family:'Font Awesome 6 Free'; font-weight:900;
-    font-size:.7rem; margin-right:.25rem;
-  }
+  .select { position:relative; width:100%; }
+  .select-trigger { width:100%; padding:8px 34px 8px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; color:var(--text); font-size:13px; cursor:pointer; transition:all .18s; position:relative; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-height:36px; display:flex; align-items:center; text-align:left; }
+  .select-trigger::after { content:''; position:absolute; right:12px; top:50%; width:6px; height:6px; border-right:1.5px solid var(--text-muted); border-bottom:1.5px solid var(--text-muted); transform:translateY(-70%) rotate(45deg); transition:transform .2s; }
+  .select.open .select-trigger { border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.1); }
+  .select.open .select-trigger::after { transform:translateY(-30%) rotate(225deg); }
+  .select-trigger.placeholder { color:var(--text-muted); }
+  .select-panel { position:fixed; background:#fff; border:1px solid var(--border); border-radius:6px; box-shadow:0 8px 24px rgba(0,0,0,.12); max-height:240px; overflow-y:auto; opacity:0; transform:translateY(-4px) scale(.98); pointer-events:none; transition:opacity .18s cubic-bezier(.22,1,.36,1), transform .18s cubic-bezier(.22,1,.36,1); padding:4px; z-index:3000; transform-origin:top center; }
+  .select-panel.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .select-option { padding:7px 10px; border-radius:4px; font-size:13px; color:var(--text-secondary); cursor:pointer; transition:background .12s, color .12s; }
+  .select-option:hover, .select-option.highlight { background:var(--bg); color:var(--text); }
+  .select-option.selected { background:var(--primary-light); color:var(--primary); font-weight:500; }
 
-  /* ============ Modal ============ */
-  .modal-backdrop {
-    position:fixed; inset:0; background:rgba(15,23,42,.5);
-    display:none; align-items:center; justify-content:center;
-    z-index:1000; padding:1.5rem;
-    -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
-    opacity:0; transition:opacity .25s;
-  }
-  .modal-backdrop.show { display:flex; opacity:1; }
-  .modal {
-    background:white; border-radius:20px; max-width:520px; width:100%;
-    max-height:90vh; overflow-y:auto;
-    box-shadow:0 30px 60px rgba(0,0,0,.2);
-    transform:scale(.96) translateY(8px);
-    transition:transform .3s cubic-bezier(.34,1.56,.64,1);
-  }
-  .modal-backdrop.show .modal { transform:scale(1) translateY(0); }
-  .modal-header {
-    padding:1.5rem 1.75rem; border-bottom:1px solid var(--border);
-    display:flex; align-items:center; justify-content:space-between;
-  }
-  .modal-title { font-size:1.05rem; font-weight:600; display:flex; align-items:center; gap:.6rem; }
-  .modal-title i {
-    width:32px; height:32px; border-radius:10px;
-    background:var(--primary-light); color:var(--primary);
-    display:inline-flex; align-items:center; justify-content:center; font-size:.85rem;
-  }
-  .modal-body { padding:1.75rem; }
-  .modal-footer {
-    padding:1.25rem 1.75rem; border-top:1px solid var(--border);
-    display:flex; justify-content:flex-end; gap:.6rem;
-  }
-  .close-btn {
-    background:transparent; border:none; font-size:1.1rem;
-    color:var(--text-muted); cursor:pointer;
-    width:36px; height:36px; border-radius:10px;
-    display:flex; align-items:center; justify-content:center;
-    transition:all .2s;
-  }
-  .close-btn:hover { background:#f1f5f9; color:var(--text); transform:rotate(90deg); }
+  .picker { position:relative; width:100%; }
+  .picker .input { cursor:pointer; }
+  .picker .input.placeholder { color:var(--text-muted); }
+  .picker-panel { position:fixed; background:#fff; border:1px solid var(--border); border-radius:8px; box-shadow:0 8px 24px rgba(0,0,0,.12); padding:12px; z-index:3000; opacity:0; transform:translateY(-4px) scale(.98); pointer-events:none; transition:opacity .18s cubic-bezier(.22,1,.36,1), transform .18s cubic-bezier(.22,1,.36,1); transform-origin:top center; }
+  .picker-panel.open { opacity:1; transform:translateY(0) scale(1); pointer-events:auto; }
+  .picker-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .picker-nav { width:28px; height:28px; border-radius:6px; border:1px solid var(--border); background:#fff; color:var(--text-secondary); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; transition:all .15s; }
+  .picker-nav:hover { background:var(--bg); border-color:var(--border-hover); transform:scale(1.05); }
+  .picker-title { font-size:13px; font-weight:600; }
+  .picker-week { display:grid; grid-template-columns:repeat(7, 1fr); gap:2px; margin-bottom:4px; }
+  .picker-week > div { text-align:center; font-size:11px; color:var(--text-muted); padding:4px 0; font-weight:500; }
+  .picker-grid { display:grid; grid-template-columns:repeat(7, 1fr); gap:2px; }
+  .picker-day { text-align:center; padding:7px 0; font-size:12px; color:var(--text-secondary); border-radius:4px; cursor:pointer; transition:all .15s; }
+  .picker-day:hover { background:var(--bg); color:var(--text); transform:scale(1.1); }
+  .picker-day.other { color:var(--text-muted); opacity:.4; pointer-events:none; }
+  .picker-day.today { color:var(--primary); font-weight:600; }
+  .picker-day.selected { background:var(--primary); color:#fff; font-weight:600; }
+  .picker-day.selected:hover { background:var(--primary-hover); }
+  .picker-foot { display:flex; gap:8px; margin-top:10px; padding-top:10px; border-top:1px solid var(--border); }
+  .picker-btn { flex:1; padding:6px 0; border:1px solid var(--border); background:#fff; color:var(--text-secondary); border-radius:6px; font-family:inherit; font-size:12px; cursor:pointer; transition:all .15s; }
+  .picker-btn:hover { background:var(--bg); color:var(--text); border-color:var(--border-hover); }
 
-  /* ============ 表单 ============ */
-  .form-group { margin-bottom:1.4rem; }
-  .form-group:last-of-type { margin-bottom:1.75rem; }
-  label { display:block; font-size:.83rem; font-weight:500; color:var(--text); margin-bottom:.55rem; }
+  /* 时间选择器固定宽度 */
+  .time-panel { min-width:280px; width:280px; }
+  .time-cols { display:grid; grid-template-columns:1fr 1fr 80px; gap:8px; height:220px; }
+  .time-col { overflow-y:auto; border:1px solid var(--border); border-radius:6px; padding:4px; scrollbar-width:thin; }
+  .time-col::-webkit-scrollbar { width:4px; }
+  .time-col::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+  .time-item { text-align:center; padding:6px 0; font-size:13px; color:var(--text-secondary); cursor:pointer; border-radius:4px; transition:all .15s; }
+  .time-item:hover { background:var(--bg); color:var(--text); }
+  .time-item.selected { background:var(--primary); color:#fff; font-weight:600; }
+  .time-period { display:flex; flex-direction:column; gap:8px; }
+  .period-btn { flex:1; padding:10px 0; border:1px solid var(--border); background:#fff; color:var(--text-secondary); border-radius:6px; font-family:inherit; font-size:13px; font-weight:500; cursor:pointer; transition:all .18s; white-space:nowrap; }
+  .period-btn:hover { background:var(--bg); }
+  .period-btn.active { background:var(--primary); color:#fff; border-color:var(--primary); }
 
-  .form-hint {
-    margin-top:1.25rem; padding-top:1.1rem;
-    border-top:1px dashed var(--border);
-    font-size:.82rem; color:var(--text-muted);
-    display:flex; align-items:flex-start; gap:.55rem; line-height:1.55;
-  }
-  .form-hint i { color:var(--primary); margin-top:.2rem; flex-shrink:0; }
+  .modal-bg { position:fixed; inset:0; background:rgba(15,23,42,.45); display:none; align-items:center; justify-content:center; z-index:1000; padding:16px; -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); animation:backdropIn .25s cubic-bezier(.22,1,.36,1) both; overflow-y:auto; }
+  .modal-bg.show { display:flex; }
+  .modal-bg.closing { animation:backdropOut .2s cubic-bezier(.22,1,.36,1) both; }
+  .modal { background:#fff; border-radius:10px; max-width:520px; width:100%; display:flex; flex-direction:column; box-shadow:0 20px 50px rgba(15,23,42,.25), 0 0 0 1px rgba(15,23,42,.05); animation:modalIn .38s cubic-bezier(.34,1.56,.64,1) both; margin:auto; }
+  .modal-bg.closing .modal { animation:modalOut .2s cubic-bezier(.22,1,.36,1) both; }
+  .modal-head { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+  .modal-title { font-size:15px; font-weight:600; }
+  .modal-close { width:28px; height:28px; border-radius:4px; border:none; background:transparent; color:var(--text-muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:14px; transition:all .2s; }
+  .modal-close:hover { background:var(--bg); color:var(--text); transform:rotate(90deg); }
+  .modal-body { padding:20px; flex:1; }
+  .modal-foot { padding:14px 20px; border-top:1px solid var(--border); display:flex; justify-content:flex-end; gap:8px; flex-shrink:0; }
 
-  .submit-btn { width:100%; justify-content:center; height:48px; font-size:.92rem; }
+  .form-hint { margin-top:14px; padding:12px; background:var(--bg); border-radius:6px; font-size:12px; color:var(--text-secondary); display:flex; align-items:flex-start; gap:8px; line-height:1.5; }
+  .form-hint i { color:var(--text-muted); margin-top:1px; flex-shrink:0; }
+  .form-hint.orange { background:var(--orange-light); }
+  .form-hint.orange i { color:var(--orange); }
 
-  /* ============ Timeline ============ */
-  .timeline { padding:.5rem 0; }
-  .history-item {
-    display:flex; align-items:flex-start; gap:1.1rem;
-    padding:1.2rem 0; border-bottom:1px solid #f1f5f9;
-    animation:fadeInUp .3s both;
-  }
-  .history-item:last-child { border-bottom:none; }
-  .history-dot {
-    width:40px; height:40px; border-radius:50%; flex-shrink:0;
-    display:flex; align-items:center; justify-content:center; font-size:.88rem;
-  }
-  .history-dot.new { background:var(--primary-light); color:var(--primary); }
-  .history-dot.extend { background:#fef3c7; color:#d97706; }
-  .history-content { flex:1; min-width:0; }
-  .history-head { display:flex; align-items:center; gap:.6rem; flex-wrap:wrap; margin-bottom:.3rem; }
-  .history-date { font-weight:600; font-size:.92rem; }
-  .history-reason { font-size:.87rem; color:var(--text-muted); word-break:break-word; }
+  .timeline { padding:4px 0; }
+  .timeline-item { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid var(--border); }
+  .timeline-item:last-child { border-bottom:none; }
+  .timeline-dot { width:28px; height:28px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:11px; }
+  .dot-blue { background:var(--primary-light); color:var(--primary); }
+  .dot-yellow { background:var(--yellow-light); color:var(--yellow); }
+  .dot-green { background:var(--green-light); color:var(--green); }
+  .dot-orange { background:var(--orange-light); color:var(--orange); }
+  .timeline-content { flex:1; min-width:0; }
+  .timeline-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:4px; }
+  .timeline-date { font-weight:500; font-size:13px; }
+  .timeline-reason { font-size:12px; color:var(--text-secondary); word-break:break-word; }
 
-  /* ============ Toast ============ */
-  .toast {
-    position:fixed; bottom:2rem; left:50%;
-    transform:translateX(-50%) translateY(20px);
-    background:#0f172a; color:white;
-    padding:.95rem 1.6rem; border-radius:40px;
-    font-size:.88rem; font-weight:500;
-    box-shadow:0 20px 40px rgba(0,0,0,.25);
-    z-index:9999; opacity:0; transition:all .3s;
-    pointer-events:none; display:flex; align-items:center; gap:.6rem;
-    max-width:calc(100vw - 2rem);
-  }
-  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-  .toast.error { background:#dc2626; }
-  .toast i { animation:pop .3s; }
+  .empty { text-align:center; padding:48px 20px; color:var(--text-muted); font-size:13px; }
+  .empty i { font-size:28px; margin-bottom:10px; color:var(--border-hover); display:block; }
 
-  .empty {
-    text-align:center; padding:4rem 2rem;
-    color:var(--text-muted); font-size:.92rem;
-  }
-  .empty i { font-size:2.5rem; margin-bottom:1rem; color:#cbd5e1; display:block; }
+  .site-footer { position:fixed; bottom:0; left:0; right:0; text-align:center; padding:12px 20px; color:var(--text-muted); font-size:12px; line-height:1.6; border-top:1px solid var(--border); background:#fff; z-index:50; box-shadow:0 -1px 3px rgba(0,0,0,.03); }
+  .site-footer .footer-sub { font-size:11px; opacity:.75; margin-top:2px; }
 
-  .btn.refreshing i { animation:rotateOnce .6s; }
+  .toast { position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:#1f2937; color:#fff; padding:10px 18px; border-radius:6px; font-size:13px; font-weight:500; box-shadow:0 8px 24px rgba(0,0,0,.15); z-index:9999; opacity:0; pointer-events:none; display:flex; align-items:center; gap:8px; max-width:calc(100vw - 32px); }
+  .toast.show { animation:toastIn .3s cubic-bezier(.34,1.4,.64,1) both; animation-fill-mode:forwards; }
+  .toast.hide { animation:toastOut .25s cubic-bezier(.22,1,.36,1) both; }
+  .toast.error { background:var(--red); }
+  .toast i { font-size:13px; }
 
-  /* ============ 导出 footer ============ */
-  .export-footer {
-    display:none;
-    padding:1.5rem 2rem;
-    border-top:2px solid #e2e8f0;
-    text-align:center; color:#64748b;
-    font-size:.78rem; line-height:1.7; background:#f8fafc;
-  }
-  .export-footer .copyright-name {
-    font-weight:700; color:#4f46e5; font-size:.88rem;
-    letter-spacing:.05em; margin-bottom:.3rem;
-  }
-  .export-footer .copyright-line {
-    display:flex; align-items:center; justify-content:center;
-    gap:1rem; flex-wrap:wrap;
-  }
-  .export-footer i { color:#8b5cf6; margin-right:.25rem; }
-
-  /* ============ 响应式 ============ */
   @media (max-width:768px) {
-    .container { padding:1.25rem 1rem 3rem; }
-    .header { margin-bottom:1.5rem; gap:.9rem; }
-    .brand-logo { width:42px; height:42px; font-size:1.1rem; border-radius:12px; }
-    .brand-text h1 { font-size:1.15rem; }
-    .brand-text p { display:none; }
-    .header-actions { width:100%; gap:.5rem; }
-    .header-actions .btn { flex:1; justify-content:center; padding:0 .8rem; font-size:.8rem; }
-    .status-pill { display:none; }
+    .topbar-inner { padding:0 12px; height:52px; }
+    .brand-tag { display:none; }
+    .conn span:last-child { display:none; }
+    .topbar-right { gap:6px; }
+    .topbar-right .btn span { display:none; }
+    .topbar-right .btn { width:32px; padding:0; justify-content:center; }
 
-    /* 工具栏换行 */
-    .toolbar {
-      padding:1.15rem 1.25rem;
-      flex-direction:column; align-items:stretch; gap:1rem;
-    }
-    .toolbar-right { width:100%; }
-    .toolbar-right .btn { flex:1; justify-content:center; }
+    .main { padding:12px 12px 100px; }
+    .main-tabs { margin-bottom:12px; }
+    .main-tab { padding:10px 12px; font-size:13px; }
 
-    /* 筛选栏 */
-    .filter-row {
-      padding:.85rem 1.25rem;
-      flex-direction:column; align-items:stretch; gap:.65rem;
-    }
-    .filter-group { width:100%; }
-    .filter-label { display:none; }
-    .filter-tabs { width:100%; }
-    .filter-tab { flex:1; justify-content:center; }
+    .card-head { padding:12px 16px; }
+    .filterbar { padding:10px 16px; gap:10px; flex-direction:column; align-items:stretch; }
+    .filter-group { width:100%; justify-content:space-between; }
+    .seg { flex:1; }
+    .seg-btn { flex:1; justify-content:center; }
 
-    /* 隐藏表格，显示卡片列表 */
     .table-wrap { display:none; }
     .mobile-list { display:flex; }
 
-    .modal { border-radius:16px; }
-    .modal-header { padding:1.25rem 1.35rem; }
-    .modal-body { padding:1.35rem; }
-    .modal-footer { padding:1.1rem 1.35rem; }
+    .modal { border-radius:8px; }
+    .modal-body { padding:16px; }
+    .toast { bottom:80px; padding:9px 14px; font-size:12px; }
+    .site-footer { padding:10px 12px; font-size:11px; }
 
-    .toast { bottom:1.25rem; padding:.85rem 1.4rem; font-size:.84rem; }
-
-    .form-group { margin-bottom:1.2rem; }
-  }
-
-  @media (max-width:480px) {
-    .container { padding:1rem .85rem 2.5rem; }
-    .header-actions .btn span { display:none; }
-    .header-actions .btn { padding:0; width:42px; min-width:42px; }
-    .header-actions .btn i { margin:0; }
-
-    .student-card { padding:1rem; }
-    .student-card-name { font-size:.95rem; }
-    .student-card-actions .icon-btn { width:34px; height:34px; }
+    .time-panel { min-width:0; width:auto !important; }
   }
 </style>
 </head>
 <body>
-<div class="container">
 
-  <header class="header">
+<div class="page-progress" id="pageProgress"></div>
+<div class="global-loading" id="globalLoading">
+  <div class="spinner"></div>
+  <div class="loading-text">加载中...</div>
+</div>
+
+<header class="topbar">
+  <div class="topbar-inner">
     <div class="brand">
-      <div class="brand-logo"><i class="fas fa-clipboard-check"></i></div>
-      <div class="brand-text">
-        <h1>学生请假系统</h1>
-        <p>Student Leave Management</p>
-      </div>
+      <div class="brand-logo">✅</div>
+      <div class="brand-name">班级考勤系统</div>
+      <span class="brand-tag">v7.0.3-Release-Running</span>
     </div>
-    <div class="header-actions">
-      <div class="status-pill">
-        <span id="connectionDot" class="status-dot status-offline"></span>
-        <span id="statusText">连接中...</span>
+    <div class="topbar-right">
+      <div class="conn">
+        <span id="connectionDot" class="conn-dot conn-off"></span>
+        <span id="statusText">连接中</span>
       </div>
-      <button class="btn btn-outline btn-icon-only" id="refreshBtn" title="刷新">
-        <i class="fas fa-sync-alt"></i>
-      </button>
-      <button class="btn btn-success" id="exportBtn" title="导出图片">
-        <i class="fas fa-image"></i> <span>导出图片</span>
-      </button>
-      <a href="admin.html" class="btn btn-outline">
-        <i class="fas fa-shield-alt"></i> <span>后台</span>
-      </a>
+      <button class="btn btn-icon" id="refreshBtn" title="刷新数据"><i class="fas fa-sync-alt"></i></button>
+      <button class="btn btn-success" id="exportBtn" title="导出"><i class="fas fa-image"></i><span>导出图片</span></button>
+      <a href="admin.html" class="btn"><i class="fas fa-shield-alt"></i><span>管理后台</span></a>
     </div>
-  </header>
+  </div>
+</header>
 
-  <div class="main-card" id="studentCard">
-    <!-- 工具栏 -->
-    <div class="toolbar">
-      <div class="toolbar-title">
-        <i class="fas fa-list-ul"></i>
-        <span>请假记录</span>
-        <span class="toolbar-sub">共 <span id="totalStudentsCount">0</span> 人</span>
-      </div>
-      <div class="toolbar-right">
-        <button class="btn btn-primary" id="openApplyBtn">
-          <i class="fas fa-plus"></i> 申请请假 / 续假
-        </button>
-      </div>
-    </div>
+<div class="main">
 
-    <!-- 筛选栏 -->
-    <div class="filter-row">
-      <div class="filter-group">
-        <span class="filter-label">状态</span>
-        <div class="filter-tabs" id="filterTabs">
-          <button class="filter-tab active" data-filter="all">
-            全部 <span class="count" id="countAll">0</span>
-          </button>
-          <button class="filter-tab" data-filter="leave">
-            已请假 <span class="count" id="countLeave">0</span>
-          </button>
-          <button class="filter-tab" data-filter="noleave">
-            未请假 <span class="count" id="countNoLeave">0</span>
-          </button>
+  <div class="main-tabs">
+    <button class="main-tab active" data-tab="leave"><i class="fas fa-file-medical"></i> 请假记录</button>
+    <button class="main-tab" data-tab="late"><i class="fas fa-hourglass-half"></i> 晚到记录 <span class="count" id="lateTabCount">0</span></button>
+  </div>
+
+  <div id="leaveTab" class="tab-content">
+    <div class="card" id="studentCard">
+      <div class="card-head">
+        <div class="card-title">
+          <i class="fas fa-list-ul"></i>
+          <span>学生列表</span>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:400;">· 共 <span id="totalStudentsCount">0</span> 人</span>
+        </div>
+        <button class="btn btn-primary btn-sm" id="openApplyBtn"><i class="fas fa-plus"></i> 申请请假</button>
+      </div>
+
+      <div class="filterbar">
+        <div class="filter-group">
+          <span class="filter-label">状态</span>
+          <div class="seg" id="filterTabs">
+            <button class="seg-btn active" data-filter="all">全部 <span class="count" id="countAll">0</span></button>
+            <button class="seg-btn" data-filter="leave">在假中 <span class="count" id="countLeave">0</span></button>
+            <button class="seg-btn" data-filter="noleave">未在假 <span class="count" id="countNoLeave">0</span></button>
+          </div>
+        </div>
+        <div class="filter-group">
+          <span class="filter-label">类型</span>
+          <div class="seg" id="typeTabs">
+            <button class="seg-btn active" data-type="all">全部</button>
+            <button class="seg-btn" data-type="boarding">住宿 <span class="count" id="countBoarding">0</span></button>
+            <button class="seg-btn" data-type="day">走读 <span class="count" id="countDay">0</span></button>
+          </div>
         </div>
       </div>
-      <div class="filter-group">
-        <span class="filter-label">类型</span>
-        <div class="filter-tabs" id="typeTabs">
-          <button class="filter-tab type-tab active" data-type="all">
-            <i class="fas fa-users" style="font-size:.7rem;"></i> 全部
-          </button>
-          <button class="filter-tab type-tab" data-type="boarding">
-            <i class="fas fa-bed" style="font-size:.7rem;"></i> 住宿 <span class="count" id="countBoarding">0</span>
-          </button>
-          <button class="filter-tab type-tab" data-type="day">
-            <i class="fas fa-home" style="font-size:.7rem;"></i> 走读 <span class="count" id="countDay">0</span>
-          </button>
-        </div>
+
+      <div style="display:none; padding:20px; border-bottom:1px solid var(--border);" id="exportHeader">
+        <div style="font-size:15px; font-weight:600; color:#1f2937;">学生请假记录表</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">导出时间：<span id="exportTime"></span></div>
       </div>
-    </div>
 
-    <!-- 导出头部 -->
-    <div style="display:none; padding:1.25rem 1.75rem; border-bottom:1px solid var(--border);" id="exportHeader">
-      <div style="font-size:1.1rem; font-weight:700; color:#0f172a;">学生请假记录表</div>
-      <div style="font-size:.78rem; color:#64748b; margin-top:.3rem;">
-        导出时间：<span id="exportTime"></span>
+      <div class="table-wrap" id="tableWrap">
+        <table>
+          <thead>
+            <tr><th>学生</th><th>当前状态</th><th>累计请假</th><th>最近记录</th><th style="text-align:right;">操作</th></tr>
+          </thead>
+          <tbody id="studentsTbody">
+            <tr><td><div style="display:flex; align-items:center; gap:10px;"><div class="skeleton skeleton-avatar"></div><div style="flex:1;"><div class="skeleton" style="width:80px; margin-bottom:6px;"></div><div class="skeleton" style="width:120px; height:10px;"></div></div></div></td><td><div class="skeleton" style="width:60px;"></div></td><td><div class="skeleton" style="width:40px;"></div></td><td><div class="skeleton" style="width:80px;"></div></td><td><div class="skeleton" style="width:100px; margin-left:auto;"></div></td></tr>
+          </tbody>
+        </table>
       </div>
-    </div>
 
-    <!-- 桌面表格 -->
-    <div class="table-wrap" id="tableWrap">
-      <table>
-        <thead>
-          <tr>
-            <th>学生</th>
-            <th>请假次数</th>
-            <th>最近请假</th>
-            <th>待审核</th>
-            <th style="text-align:right;">操作</th>
-          </tr>
-        </thead>
-        <tbody id="studentsTbody">
-          <tr><td colspan="5" class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- 移动端卡片列表 -->
-    <div class="mobile-list" id="mobileList">
-      <div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>
-    </div>
-
-    <!-- 导出 footer -->
-    <div class="export-footer" id="exportFooter">
-      <div class="copyright-name">学生请假管理系统</div>
-      <div class="copyright-line">
-        <span><i class="fas fa-copyright"></i>2025 Student Leave System. All Rights Reserved.</span>
-        <span><i class="fas fa-code"></i>Version 1.0.0</span>
+      <div class="mobile-list" id="mobileList">
+        <div class="stu-card"><div class="stu-card-head"><div class="skeleton skeleton-avatar"></div><div style="flex:1;"><div class="skeleton" style="width:80px; margin-bottom:8px;"></div><div class="skeleton" style="width:120px; height:10px;"></div></div></div><div class="stu-card-body"><div class="skeleton" style="width:100px;"></div><div class="skeleton" style="width:80px;"></div></div></div>
       </div>
-      <div style="margin-top:.35rem; font-size:.7rem; color:#94a3b8;">
-        本报表由系统自动生成 · 仅供内部使用
+
+      <div style="display:none; padding:20px; border-top:1px solid var(--border); text-align:center; color:#9ca3af; font-size:12px; line-height:1.6; background:#fafbfc;" id="exportFooter">
+        <div style="font-weight:600; color:#2563eb; font-size:13px; margin-bottom:4px;">学生请假管理系统</div>
+        <div>Copyright© 2023-2026 天津市槐序网络科技工作室. All Rights Reserved.</div>
+        <div style="margin-top:4px;">本报表由系统自动生成 · 仅供内部使用</div>
       </div>
     </div>
   </div>
+
+  <div id="lateTab" class="tab-content" style="display:none;">
+    <div class="card" id="lateCard">
+      <div class="card-head">
+        <div class="card-title">
+          <i class="fas fa-hourglass-half" style="color:var(--orange);"></i>
+          <span>晚到记录</span>
+          <span style="font-size:12px; color:var(--text-muted); font-weight:400;">· 共 <span id="lateTotalCount">0</span> 条</span>
+        </div>
+        <button class="btn btn-orange btn-sm" id="openLateApplyBtn"><i class="fas fa-plus"></i> 申请晚到</button>
+      </div>
+
+      <div class="filterbar">
+        <div class="filter-group">
+          <span class="filter-label">状态</span>
+          <div class="seg" id="lateStatusTabs">
+            <button class="seg-btn active" data-status="all">全部 <span class="count" id="lateCountAll">0</span></button>
+            <button class="seg-btn" data-status="pending">待审核 <span class="count" id="lateCountPending">0</span></button>
+            <button class="seg-btn" data-status="approved">已通过 <span class="count" id="lateCountApproved">0</span></button>
+            <button class="seg-btn" data-status="rejected">已驳回 <span class="count" id="lateCountRejected">0</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:none; padding:20px; border-bottom:1px solid var(--border);" id="lateExportHeader">
+        <div style="font-size:15px; font-weight:600; color:#1f2937;">学生晚到记录表</div>
+        <div style="font-size:12px; color:#6b7280; margin-top:4px;">导出时间：<span id="lateExportTime"></span></div>
+      </div>
+
+      <div class="table-wrap" id="lateTableWrap">
+        <table>
+          <thead>
+            <tr><th>学生</th><th>日期</th><th>时间</th><th>原因</th><th>状态</th><th>是否到校</th><th>记录人</th></tr>
+          </thead>
+          <tbody id="lateTbody">
+            <tr><td colspan="7" class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mobile-list" id="lateMobileList">
+        <div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>
+      </div>
+
+      <div style="display:none; padding:20px; border-top:1px solid var(--border); text-align:center; color:#9ca3af; font-size:12px; line-height:1.6; background:#fafbfc;" id="lateExportFooter">
+        <div style="font-weight:600; color:#2563eb; font-size:13px; margin-bottom:4px;">学生请假管理系统</div>
+        <div>Copyright© 2023-2026 天津市槐序网络科技工作室. All Rights Reserved.</div>
+        <div style="margin-top:4px;">本报表由系统自动生成 · 仅供内部使用</div>
+      </div>
+    </div>
+  </div>
+
 </div>
 
-<!-- ============ 申请请假 Modal ============ -->
-<div class="modal-backdrop" id="applyModal">
+<footer class="site-footer">
+  <div>Copyright© 2023-2026 天津市槐序网络科技工作室.</div>
+  <div class="footer-sub">All Rights Reserved · Powered by Ant Design</div>
+</footer>
+
+<!-- 申请请假 -->
+<div class="modal-bg" id="applyModal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-pen"></i> 申请请假 / 续假</div>
-      <button class="close-btn" onclick="closeApplyModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-head">
+      <div class="modal-title">申请请假 / 续假 / 销假</div>
+      <button class="modal-close" onclick="closeApplyModal()"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
       <form id="leaveForm">
-        <div class="form-group">
-          <label for="studentSelect">选择学生</label>
-          <select id="studentSelect" data-custom-select data-placeholder="— 请选择学生 —" required>
-            <option value="">— 请选择 —</option>
+        <div class="field">
+          <label class="field-label">选择学生</label>
+          <select id="studentSelect" data-custom-select data-placeholder="请选择学生" style="display:none">
+            <option value="">请选择</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="leaveType">请假类型</label>
-          <select id="leaveType" data-custom-select data-placeholder="选择类型">
-            <option value="new">📋 新请假</option>
-            <option value="extend">⏳ 续假</option>
+        <div class="field">
+          <label class="field-label">类型</label>
+          <select id="leaveType" data-custom-select data-placeholder="选择类型" style="display:none">
+            <option value="new">新请假</option>
+            <option value="extend">续假</option>
+            <option value="return">销假（已返校）</option>
           </select>
         </div>
-        <div class="form-group">
-          <label for="leaveReason">请假原因 (可选)</label>
-          <div class="custom-input-wrap has-icon">
-            <i class="fas fa-comment-dots input-icon"></i>
-            <input type="text" id="leaveReason" class="custom-input" placeholder="如：病假、事假..." maxlength="50">
+        <div class="field">
+          <label class="field-label">预计到校（可选）</label>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+            <div class="input-wrap has-icon">
+              <i class="fas fa-calendar-alt input-icon"></i>
+              <input type="text" id="leaveExpectedDate" class="input" data-date-picker placeholder="日期" readonly>
+            </div>
+            <div class="input-wrap has-icon">
+              <i class="fas fa-clock input-icon"></i>
+              <input type="text" id="leaveExpectedTime" class="input" data-time-picker placeholder="时间" readonly>
+            </div>
           </div>
         </div>
-        <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+        <div class="field">
+          <label class="field-label">原因（可选）</label>
+          <div class="input-wrap has-icon">
+            <i class="fas fa-comment-dots input-icon"></i>
+            <input type="text" id="leaveReason" class="input" placeholder="如：病假、事假..." maxlength="50">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="submitBtn" style="width:100%; justify-content:center; height:38px;">
           <i class="fas fa-paper-plane"></i> 提交申请
         </button>
         <div class="form-hint">
           <i class="fas fa-info-circle"></i>
-          <span>提交后需管理员审核通过，才会计入正式请假次数。</span>
+          <span>提交后需管理员审核通过。销假表示已返校，不会增加请假次数。</span>
         </div>
       </form>
     </div>
   </div>
 </div>
 
-<!-- ============ 历史 Modal ============ -->
-<div class="modal-backdrop" id="historyModal">
+<!-- 申请晚到 -->
+<div class="modal-bg" id="lateApplyModal">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-history"></i> <span id="historyTitle">请假历史</span></div>
-      <button class="close-btn" onclick="closeHistoryModal()"><i class="fas fa-times"></i></button>
+    <div class="modal-head">
+      <div class="modal-title">申请晚到</div>
+      <button class="modal-close" onclick="closeLateApplyModal()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form id="lateForm">
+        <div class="field">
+          <label class="field-label">选择学生</label>
+          <select id="lateStudentSelect" data-custom-select data-placeholder="请选择学生" style="display:none">
+            <option value="">请选择</option>
+          </select>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="field">
+            <label class="field-label">日期</label>
+            <div class="input-wrap has-icon">
+              <i class="fas fa-calendar-alt input-icon"></i>
+              <input type="text" id="lateDate" class="input" data-date-picker placeholder="选择日期" readonly>
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">预计到达时间</label>
+            <div class="input-wrap has-icon">
+              <i class="fas fa-clock input-icon"></i>
+              <input type="text" id="lateTime" class="input" data-time-picker placeholder="选择时间" readonly>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label">原因</label>
+          <div class="input-wrap has-icon">
+            <i class="fas fa-comment-dots input-icon"></i>
+            <input type="text" id="lateReason" class="input" placeholder="如：路上堵车..." maxlength="50">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-orange" id="lateSubmitBtn" style="width:100%; justify-content:center; height:38px;">
+          <i class="fas fa-paper-plane"></i> 提交晚到申请
+        </button>
+        <div class="form-hint orange">
+          <i class="fas fa-info-circle"></i>
+          <span>提交后等待管理员审核。老师会在审核时确认是否已到校。</span>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- 历史 Modal -->
+<div class="modal-bg" id="historyModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title" id="historyTitle">请假历史</div>
+      <button class="modal-close" onclick="closeHistoryModal()"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body" id="historyBody"></div>
-    <div class="modal-footer">
-      <button class="btn btn-outline" onclick="closeHistoryModal()">关闭</button>
-    </div>
   </div>
 </div>
 
@@ -650,7 +563,246 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
-// ========== 自定义下拉 ==========
+/* ============ 全局实例列表（防多面板同时打开） ============ */
+const _allPickers = [];
+const _allSelects = [];
+
+/* ============ 浮动面板定位 ============ */
+function positionFloatingPanel(panel, trigger) {
+  const rect = trigger.getBoundingClientRect();
+  panel.style.position = 'fixed';
+  panel.style.zIndex = '3000';
+  panel.style.top = (rect.bottom + 4) + 'px';
+
+  const isTimePanel = panel.classList.contains('time-panel');
+  if (isTimePanel) {
+    const panelWidth = 280;
+    panel.style.width = panelWidth + 'px';
+    let left = rect.left;
+    if (left + panelWidth > window.innerWidth - 12) left = window.innerWidth - panelWidth - 12;
+    if (left < 12) left = 12;
+    panel.style.left = left + 'px';
+  } else {
+    panel.style.width = rect.width + 'px';
+    panel.style.left = rect.left + 'px';
+  }
+
+  const panelHeight = panel.offsetHeight || 300;
+  if (rect.bottom + panelHeight + 20 > window.innerHeight) {
+    panel.style.top = Math.max(12, rect.top - panelHeight - 4) + 'px';
+  }
+}
+
+const Loading = {
+  showProgress() { document.getElementById('pageProgress').classList.add('active'); },
+  hideProgress() { document.getElementById('pageProgress').classList.remove('active'); }
+};
+
+document.addEventListener('click', (e) => {
+  const btn = e.target.closest('.btn');
+  if (!btn || btn.disabled) return;
+  const rect = btn.getBoundingClientRect();
+  const size = Math.max(rect.width, rect.height);
+  const ripple = document.createElement('span');
+  ripple.className = 'ripple';
+  ripple.style.width = ripple.style.height = size + 'px';
+  ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+  ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+  btn.appendChild(ripple);
+  setTimeout(() => ripple.remove(), 600);
+});
+
+function openModal(id) { const bg = document.getElementById(id); bg.classList.remove('closing'); bg.classList.add('show'); }
+function closeModal(id) { const bg = document.getElementById(id); if (!bg.classList.contains('show')) return; bg.classList.add('closing'); setTimeout(() => { bg.classList.remove('show', 'closing'); }, 220); }
+
+/* ============ 自定义日期选择器 ============ */
+class CustomDatePicker {
+  constructor(input) {
+    this.input = input;
+    this.value = input.value || '';
+    this.viewYear = new Date().getFullYear();
+    this.viewMonth = new Date().getMonth();
+    this.wrap = document.createElement('div');
+    this.wrap.className = 'picker';
+    this.wrap._picker = this;
+    input.parentNode.insertBefore(this.wrap, input);
+    this.wrap.appendChild(input);
+    this.panel = document.createElement('div');
+    this.panel.className = 'picker-panel';
+    document.body.appendChild(this.panel);
+    _allPickers.push(this);
+    input.addEventListener('click', (e) => { e.stopPropagation(); this.toggle(); });
+    document.addEventListener('click', (e) => { if (!this.wrap.contains(e.target) && !this.panel.contains(e.target)) this.close(); });
+    window.addEventListener('resize', () => { if (this.isOpen()) positionFloatingPanel(this.panel, this.input); });
+    window.addEventListener('scroll', () => { if (this.isOpen()) positionFloatingPanel(this.panel, this.input); }, true);
+    this.updateInput();
+  }
+  updateInput() { if (this.value) { this.input.value = this.value; this.input.classList.remove('placeholder'); } else { this.input.value = ''; this.input.classList.add('placeholder'); } }
+  setValue(v) { this.value = v; this.updateInput(); this.input.dispatchEvent(new Event('change', { bubbles: true })); }
+  toggle() { this.isOpen() ? this.close() : this.open(); }
+  isOpen() { return this.wrap.classList.contains('open'); }
+  open() {
+    _allPickers.forEach(p => { if (p !== this) p.close(); });
+    _allSelects.forEach(s => s.close());
+    this.wrap.classList.add('open');
+    this.panel.classList.add('open');
+    if (this.value) { const d = new Date(this.value); if (!isNaN(d)) { this.viewYear = d.getFullYear(); this.viewMonth = d.getMonth(); } }
+    this.render();
+    positionFloatingPanel(this.panel, this.input);
+    setTimeout(() => positionFloatingPanel(this.panel, this.input), 20);
+  }
+  close() { this.wrap.classList.remove('open'); this.panel.classList.remove('open'); }
+  render() {
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const firstDay = new Date(this.viewYear, this.viewMonth, 1);
+    const startWeek = firstDay.getDay();
+    const daysInMonth = new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
+    const prevMonthDays = new Date(this.viewYear, this.viewMonth, 0).getDate();
+    const monthNames = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+    let cells = '';
+    for (let i = startWeek - 1; i >= 0; i--) cells += `<div class="picker-day other">${prevMonthDays - i}</div>`;
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${this.viewYear}-${String(this.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const cls = ['picker-day'];
+      if (dateStr === todayStr) cls.push('today');
+      if (dateStr === this.value) cls.push('selected');
+      cells += `<div class="${cls.join(' ')}" data-date="${dateStr}">${d}</div>`;
+    }
+    const totalCells = startWeek + daysInMonth;
+    const remaining = (7 - totalCells % 7) % 7;
+    for (let i = 1; i <= remaining; i++) cells += `<div class="picker-day other">${i}</div>`;
+    this.panel.innerHTML = `
+      <div class="picker-head">
+        <button type="button" class="picker-nav" data-nav="-1"><i class="fas fa-chevron-left"></i></button>
+        <div class="picker-title">${this.viewYear} 年 ${monthNames[this.viewMonth]}</div>
+        <button type="button" class="picker-nav" data-nav="1"><i class="fas fa-chevron-right"></i></button>
+      </div>
+      <div class="picker-week"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
+      <div class="picker-grid">${cells}</div>
+      <div class="picker-foot"><button type="button" class="picker-btn" data-action="today">今天</button><button type="button" class="picker-btn" data-action="clear">清除</button></div>
+    `;
+    this.panel.querySelectorAll('.picker-nav').forEach(btn => { btn.addEventListener('click', () => { const dir = parseInt(btn.dataset.nav); this.viewMonth += dir; if (this.viewMonth < 0) { this.viewMonth = 11; this.viewYear--; } if (this.viewMonth > 11) { this.viewMonth = 0; this.viewYear++; } this.render(); positionFloatingPanel(this.panel, this.input); }); });
+    this.panel.querySelectorAll('.picker-day:not(.other)').forEach(day => { day.addEventListener('click', () => { this.setValue(day.dataset.date); this.close(); }); });
+    this.panel.querySelectorAll('.picker-btn').forEach(btn => { btn.addEventListener('click', () => { const action = btn.dataset.action; if (action === 'today') { this.setValue(todayStr); this.close(); } else if (action === 'clear') { this.setValue(''); this.close(); } }); });
+  }
+}
+
+/* ============ 自定义时间选择器 ============ */
+class CustomTimePicker {
+  constructor(input) {
+    this.input = input;
+    this.value = input.value || '';
+    this.hour = 8;
+    this.minute = 0;
+    this.period = 'AM';
+    this.wrap = document.createElement('div');
+    this.wrap.className = 'picker';
+    this.wrap._picker = this;
+    input.parentNode.insertBefore(this.wrap, input);
+    this.wrap.appendChild(input);
+    this.panel = document.createElement('div');
+    this.panel.className = 'picker-panel time-panel';
+    document.body.appendChild(this.panel);
+    _allPickers.push(this);
+    input.addEventListener('click', (e) => { e.stopPropagation(); this.toggle(); });
+    document.addEventListener('click', (e) => { if (!this.wrap.contains(e.target) && !this.panel.contains(e.target)) this.close(); });
+    window.addEventListener('resize', () => { if (this.isOpen()) positionFloatingPanel(this.panel, this.input); });
+    window.addEventListener('scroll', () => { if (this.isOpen()) positionFloatingPanel(this.panel, this.input); }, true);
+    this.parseValue();
+    this.updateInput();
+  }
+  parseValue() {
+    if (!this.value) return;
+    const parts = this.value.split(':');
+    if (parts.length === 2) {
+      const h = parseInt(parts[0]);
+      const m = parseInt(parts[1]);
+      if (!isNaN(h)) {
+        if (h === 0) { this.hour = 12; this.period = 'AM'; }
+        else if (h < 12) { this.hour = h; this.period = 'AM'; }
+        else if (h === 12) { this.hour = 12; this.period = 'PM'; }
+        else { this.hour = h - 12; this.period = 'PM'; }
+      }
+      if (!isNaN(m)) this.minute = Math.round(m / 5) * 5 % 60;
+    }
+  }
+  updateInput() { if (this.value) { this.input.value = this.value; this.input.classList.remove('placeholder'); } else { this.input.value = ''; this.input.classList.add('placeholder'); } }
+  setValue() { let h24 = this.hour % 12; if (this.period === 'PM') h24 += 12; this.value = `${String(h24).padStart(2,'0')}:${String(this.minute).padStart(2,'0')}`; this.updateInput(); this.input.dispatchEvent(new Event('change', { bubbles: true })); }
+  toggle() { this.isOpen() ? this.close() : this.open(); }
+  isOpen() { return this.wrap.classList.contains('open'); }
+  open() {
+    _allPickers.forEach(p => { if (p !== this) p.close(); });
+    _allSelects.forEach(s => s.close());
+    this.wrap.classList.add('open');
+    this.panel.classList.add('open');
+    this.render();
+    positionFloatingPanel(this.panel, this.input);
+    setTimeout(() => positionFloatingPanel(this.panel, this.input), 20);
+  }
+  close() { this.wrap.classList.remove('open'); this.panel.classList.remove('open'); }
+  render() {
+    let hourCol = '';
+    for (let h = 1; h <= 12; h++) hourCol += `<div class="time-item ${h === this.hour ? 'selected' : ''}" data-h="${h}">${String(h).padStart(2,'0')}</div>`;
+    let minCol = '';
+    for (let m = 0; m < 60; m += 5) minCol += `<div class="time-item ${m === this.minute ? 'selected' : ''}" data-m="${m}">${String(m).padStart(2,'0')}</div>`;
+    this.panel.innerHTML = `
+      <div class="time-cols">
+        <div class="time-col" data-col="hour">${hourCol}</div>
+        <div class="time-col" data-col="min">${minCol}</div>
+        <div class="time-period">
+          <button type="button" class="period-btn ${this.period === 'AM' ? 'active' : ''}" data-p="AM">上午</button>
+          <button type="button" class="period-btn ${this.period === 'PM' ? 'active' : ''}" data-p="PM">下午</button>
+        </div>
+      </div>
+      <div class="picker-foot" style="margin-top:10px;">
+        <button type="button" class="picker-btn" data-action="now">现在</button>
+        <button type="button" class="picker-btn" data-action="clear">清除</button>
+      </div>
+    `;
+    this.panel.querySelectorAll('.time-col[data-col="hour"] .time-item').forEach(el => { el.addEventListener('click', () => { this.hour = parseInt(el.dataset.h); this.setValue(); this.render(); }); });
+    this.panel.querySelectorAll('.time-col[data-col="min"] .time-item').forEach(el => { el.addEventListener('click', () => { this.minute = parseInt(el.dataset.m); this.setValue(); this.render(); }); });
+    this.panel.querySelectorAll('.period-btn').forEach(el => { el.addEventListener('click', () => { this.period = el.dataset.p; this.setValue(); this.render(); }); });
+    this.panel.querySelectorAll('.picker-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const action = btn.dataset.action;
+        if (action === 'now') { const now = new Date(); let h = now.getHours(); this.period = h < 12 ? 'AM' : 'PM'; this.hour = h % 12 || 12; this.minute = Math.round(now.getMinutes() / 5) * 5 % 60; this.setValue(); this.close(); }
+        else if (action === 'clear') { this.value = ''; this.updateInput(); this.close(); }
+      });
+    });
+    setTimeout(() => { this.panel.querySelectorAll('.time-item.selected').forEach(el => el.scrollIntoView({ block: 'center' })); }, 50);
+  }
+}
+
+/* ============ 自定义 Confirm ============ */
+function customConfirm(message, options = {}) {
+  return new Promise((resolve) => {
+    const title = options.title || '确认操作';
+    const okText = options.okText || '确定';
+    const cancelText = options.cancelText || '取消';
+    const danger = options.danger || false;
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg show';
+    bg.style.zIndex = '2000';
+    bg.innerHTML = `
+      <div class="modal" style="max-width:400px;">
+        <div class="modal-head"><div class="modal-title">${title}</div></div>
+        <div class="modal-body" style="padding:20px; font-size:13px; color:var(--text-secondary); line-height:1.6;">${message}</div>
+        <div class="modal-foot"><button class="btn" data-action="cancel">${cancelText}</button><button class="btn ${danger ? 'btn-danger' : 'btn-primary'}" data-action="ok">${okText}</button></div>
+      </div>
+    `;
+    document.body.appendChild(bg);
+    let closed = false;
+    const close = (result) => { if (closed) return; closed = true; bg.classList.add('closing'); setTimeout(() => { bg.classList.remove('show', 'closing'); bg.remove(); }, 220); resolve(result); };
+    bg.querySelector('[data-action="cancel"]').addEventListener('click', (e) => { e.stopPropagation(); close(false); });
+    bg.querySelector('[data-action="ok"]').addEventListener('click', (e) => { e.stopPropagation(); close(true); });
+    bg.addEventListener('click', (e) => { if (e.target === bg) close(false); });
+    const escHandler = (e) => { if (e.key === 'Escape') { close(false); document.removeEventListener('keydown', escHandler); } };
+    document.addEventListener('keydown', escHandler);
+  });
+}
+
+/* ============ 自定义下拉 ============ */
 class CustomSelect {
   constructor(nativeSelect, options = {}) {
     this.native = nativeSelect;
@@ -658,146 +810,120 @@ class CustomSelect {
     this.isOpen = false;
     this.native.style.display = 'none';
     this.wrapper = document.createElement('div');
-    this.wrapper.className = 'custom-select';
+    this.wrapper.className = 'select';
+    this.wrapper._cs = this;
     this.wrapper.tabIndex = 0;
     this.trigger = document.createElement('div');
-    this.trigger.className = 'custom-select-trigger';
+    this.trigger.className = 'select-trigger';
     this.wrapper.appendChild(this.trigger);
     this.panel = document.createElement('div');
-    this.panel.className = 'custom-select-panel';
-    this.wrapper.appendChild(this.panel);
+    this.panel.className = 'select-panel';
+    document.body.appendChild(this.panel);
     this.native.parentNode.insertBefore(this.wrapper, this.native);
+    _allSelects.push(this);
     this.bindEvents();
     this.refresh();
   }
   refresh() {
     const selectedOpt = this.native.options[this.native.selectedIndex];
-    if (selectedOpt && selectedOpt.value !== '') {
-      this.trigger.textContent = selectedOpt.textContent;
-      this.trigger.classList.remove('placeholder');
-    } else {
-      this.trigger.textContent = this.placeholder;
-      this.trigger.classList.add('placeholder');
-    }
+    if (selectedOpt && selectedOpt.value !== '') { this.trigger.textContent = selectedOpt.textContent; this.trigger.classList.remove('placeholder'); }
+    else { this.trigger.textContent = this.placeholder; this.trigger.classList.add('placeholder'); }
     this.panel.innerHTML = '';
-    Array.from(this.native.options).forEach((opt, idx) => {
+    Array.from(this.native.options).forEach((opt) => {
       if (opt.value === '' && opt.disabled) return;
       const item = document.createElement('div');
-      item.className = 'custom-select-option';
+      item.className = 'select-option';
       if (opt.value === this.native.value) item.classList.add('selected');
-      if (opt.disabled) item.classList.add('disabled');
       item.dataset.value = opt.value;
       item.textContent = opt.textContent;
-      item.addEventListener('click', () => {
-        if (opt.disabled) return;
-        this.selectValue(opt.value);
-        this.close();
-      });
+      item.addEventListener('click', () => { this.selectValue(opt.value); this.close(); });
       this.panel.appendChild(item);
     });
   }
-  selectValue(value) {
-    this.native.value = value;
-    this.native.dispatchEvent(new Event('change', { bubbles: true }));
-    this.refresh();
-  }
+  selectValue(value) { this.native.value = value; this.native.dispatchEvent(new Event('change', { bubbles: true })); this.refresh(); }
   open() {
     if (this.isOpen) return;
-    document.querySelectorAll('.custom-select.open').forEach(el => {
-      if (el !== this.wrapper) el._customSelect?.close();
-    });
+    _allSelects.forEach(s => { if (s !== this) s.close(); });
+    _allPickers.forEach(p => p.close());
     this.isOpen = true;
     this.wrapper.classList.add('open');
-    const selected = this.panel.querySelector('.custom-select-option.selected');
-    if (selected) selected.scrollIntoView({ block: 'nearest' });
+    this.panel.classList.add('open');
+    positionFloatingPanel(this.panel, this.trigger);
+    setTimeout(() => positionFloatingPanel(this.panel, this.trigger), 20);
   }
-  close() { this.isOpen = false; this.wrapper.classList.remove('open'); }
+  close() { this.isOpen = false; this.wrapper.classList.remove('open'); this.panel.classList.remove('open'); }
   bindEvents() {
-    this.trigger.addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (this.isOpen) this.close(); else this.open();
-    });
-    document.addEventListener('click', (e) => {
-      if (!this.wrapper.contains(e.target)) this.close();
-    });
+    this.trigger.addEventListener('click', (e) => { e.stopPropagation(); if (this.isOpen) this.close(); else this.open(); });
+    document.addEventListener('click', (e) => { if (!this.wrapper.contains(e.target) && !this.panel.contains(e.target)) this.close(); });
     this.native.addEventListener('change', () => this.refresh());
+    window.addEventListener('resize', () => { if (this.isOpen) positionFloatingPanel(this.panel, this.trigger); });
+    window.addEventListener('scroll', () => { if (this.isOpen) positionFloatingPanel(this.panel, this.trigger); }, true);
   }
 }
+
 function initCustomSelects() {
   document.querySelectorAll('select[data-custom-select]').forEach(sel => {
-    if (!sel._customSelect) {
-      sel._customSelect = new CustomSelect(sel, {
-        placeholder: sel.dataset.placeholder || '请选择'
-      });
-    }
+    if (!sel._cs) sel._cs = new CustomSelect(sel, { placeholder: sel.dataset.placeholder || '请选择' });
   });
 }
 
-// ========== 业务逻辑 ==========
+/* ============ 业务逻辑 ============ */
 const API_BASE = '/api';
 const $ = s => document.querySelector(s);
 const $$ = s => document.querySelectorAll(s);
 let allStudents = [];
 let currentFilter = 'all';
 let currentType = 'all';
+let currentLateStatus = 'all';
 let isLoading = false;
+let currentTab = 'leave';
 
 function showToast(msg, isError = false) {
   const t = $('#toast');
+  t.classList.remove('show', 'hide');
+  void t.offsetWidth;
   t.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i><span>${msg}</span>`;
   t.classList.toggle('error', isError);
   t.classList.add('show');
   clearTimeout(t._timer);
-  t._timer = setTimeout(() => t.classList.remove('show'), 2400);
+  t._timer = setTimeout(() => { t.classList.add('hide'); setTimeout(() => t.classList.remove('show', 'hide'), 250); }, 2200);
 }
 
 async function apiRequest(path, options = {}) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json' }, ...options
-  });
+  const res = await fetch(`${API_BASE}${path}`, { headers: { 'Content-Type': 'application/json' }, ...options });
   const text = await res.text();
   let data;
   try { data = JSON.parse(text); }
-  catch (e) { throw new Error(res.status === 404 ? `接口不存在` : `服务器异常 (${res.status})`); }
+  catch (e) { throw new Error(res.status === 404 ? '接口不存在' : `服务器异常 (${res.status})`); }
   if (!res.ok || !data.success) throw new Error(data.message || `请求失败 (${res.status})`);
   return data;
 }
 
 async function checkConnection() {
-  try {
-    await fetch(`${API_BASE}/health`);
-    $('#connectionDot').className = 'status-dot status-online';
-    $('#statusText').textContent = '已连接';
-  } catch {
-    $('#connectionDot').className = 'status-dot status-offline';
-    $('#statusText').textContent = '未连接';
-  }
+  try { await fetch(`${API_BASE}/health`); $('#connectionDot').className = 'conn-dot conn-on'; $('#statusText').textContent = '已连接'; }
+  catch { $('#connectionDot').className = 'conn-dot conn-off'; $('#statusText').textContent = '未连接'; }
 }
 
-function getPendingCount(student) {
-  return student.history.filter(h => h.status === 'pending').length;
-}
+function getPendingCount(student) { return (student.history || []).filter(h => h.status === 'pending').length; }
 function typeLabel(type) { return type === 'boarding' ? '住宿' : '走读'; }
-function typeIcon(type) { return type === 'boarding' ? 'fa-bed' : 'fa-home'; }
-function typeBadgeClass(type) { return type === 'boarding' ? 'badge-boarding' : 'badge-day'; }
+function recordTypeLabel(t) { return t === 'extend' ? '续假' : (t === 'return' ? '销假' : '新请假'); }
+function recordTypeIcon(t) { return t === 'extend' ? 'fa-clock' : (t === 'return' ? 'fa-right-to-bracket' : 'fa-file-medical'); }
+function recordTypeDot(t) { return t === 'extend' ? 'dot-yellow' : (t === 'return' ? 'dot-green' : 'dot-blue'); }
+function recordTypeTag(t) { return t === 'extend' ? 'tag-yellow' : (t === 'return' ? 'tag-green' : 'tag-blue'); }
 
 function animateNumber(el, target) {
   if (!el) return;
-  const current = parseInt(el.textContent) || 0;
-  if (current === target) { el.textContent = target; return; }
-  const steps = 12;
-  const step = (target - current) / steps;
+  const cur = parseInt(el.textContent) || 0;
+  if (cur === target) { el.textContent = target; return; }
+  const steps = 10;
+  const step = (target - cur) / steps;
   let i = 0;
-  const timer = setInterval(() => {
-    i++;
-    if (i >= steps) { el.textContent = target; clearInterval(timer); return; }
-    el.textContent = Math.round(current + step * i);
-  }, 25);
+  const timer = setInterval(() => { i++; if (i >= steps) { el.textContent = target; clearInterval(timer); return; } el.textContent = Math.round(cur + step * i); }, 25);
 }
 
 function updateCounts() {
   const total = allStudents.length;
-  const leaveCount = allStudents.filter(s => s.leaveCount > 0).length;
+  const leaveCount = allStudents.filter(s => s.onLeave).length;
   const noLeaveCount = total - leaveCount;
   const boardingCount = allStudents.filter(s => s.type === 'boarding').length;
   const dayCount = allStudents.filter(s => s.type === 'day').length;
@@ -812,129 +938,102 @@ function updateCounts() {
 function applyFilter() {
   let filtered = allStudents;
   if (currentType !== 'all') filtered = filtered.filter(s => s.type === currentType);
-  if (currentFilter === 'leave') filtered = filtered.filter(s => s.leaveCount > 0);
-  else if (currentFilter === 'noleave') filtered = filtered.filter(s => s.leaveCount === 0);
+  if (currentFilter === 'leave') filtered = filtered.filter(s => s.onLeave);
+  else if (currentFilter === 'noleave') filtered = filtered.filter(s => !s.onLeave);
   renderTable(filtered);
   renderMobileList(filtered);
 }
 
 function renderTable(students) {
   const tbody = $('#studentsTbody');
-  if (!students.length) {
-    tbody.innerHTML = `<tr><td colspan="5" class="empty"><i class="fas fa-inbox"></i>暂无学生数据</td></tr>`;
-    return;
-  }
+  if (!students.length) { tbody.innerHTML = `<tr><td colspan="5" class="empty"><i class="fas fa-inbox"></i>暂无学生数据</td></tr>`; return; }
   let html = '';
-  students.forEach((s, idx) => {
+  students.forEach((s, i) => {
     const pending = getPendingCount(s);
-    const typeBadge = `<span class="badge ${typeBadgeClass(s.type)}"><i class="fas ${typeIcon(s.type)}"></i>${typeLabel(s.type)}</span>`;
-    const pendingBadge = pending > 0
-      ? `<span class="badge badge-pending"><i class="fas fa-clock"></i> ${pending}</span>`
-      : `<span style="color:var(--text-muted); font-size:.85rem;">—</span>`;
-    html += `<tr style="animation-delay:${Math.min(idx * 25, 250)}ms">
-      <td>
-        <div class="student-cell">
-          <span class="avatar">${s.name.charAt(0)}</span>
-          <div class="student-info">
-            <span class="student-name">${s.name}</span>
-            <span class="student-meta">
-              <span class="badge badge-class">${s.class || '—'}</span>
-              ${typeBadge}
-            </span>
-          </div>
-        </div>
-      </td>
-      <td><span class="badge badge-count">${s.leaveCount} 次</span></td>
-      <td style="color:var(--text-muted); font-size:.85rem;">${s.lastLeave || '—'}</td>
-      <td>${pendingBadge}</td>
-      <td>
-        <div class="row-actions">
-          <button class="icon-btn view-history" data-id="${s.id}" title="查看历史"><i class="fas fa-history"></i></button>
-          <button class="icon-btn quick-extend" data-id="${s.id}" title="快速续假"><i class="fas fa-clock"></i></button>
-        </div>
-      </td>
+    const typeTag = `<span class="tag ${s.type === 'boarding' ? 'tag-boarding' : 'tag-day'}">${typeLabel(s.type)}</span>`;
+    const statusTag = s.onLeave ? `<span class="tag tag-yellow"><i class="fas fa-clock"></i>在假中</span>` : `<span class="tag tag-green"><i class="fas fa-check"></i>未在假</span>`;
+    const pendingTag = pending > 0 ? `<span class="tag tag-blue" style="margin-left:4px;"><i class="fas fa-hourglass-half"></i>${pending}</span>` : '';
+    html += `<tr class="stagger-item" style="animation-delay:${Math.min(i*25, 300)}ms">
+      <td><div class="stu-cell"><span class="avatar">${s.name.charAt(0)}</span><div><div class="stu-name">${s.name}</div><div class="stu-meta">${s.class || '—'} ${typeTag}</div></div></div></td>
+      <td>${statusTag}${pendingTag}</td>
+      <td><span style="font-weight:600;">${s.leaveCount}</span> <span style="color:var(--text-muted); font-size:12px;">次</span></td>
+      <td style="color:var(--text-secondary); font-size:12px;">${s.lastLeave || '—'}</td>
+      <td><div class="row-actions">
+        <button class="action-btn" data-action="view-history" data-id="${s.id}" title="历史"><i class="fas fa-history"></i></button>
+        <button class="action-btn" data-action="quick-extend" data-id="${s.id}" title="续假"><i class="fas fa-clock"></i></button>
+        <button class="action-btn" data-action="quick-return" data-id="${s.id}" title="销假" ${!s.onLeave ? 'disabled' : ''}><i class="fas fa-right-to-bracket"></i></button>
+      </div></td>
     </tr>`;
   });
   tbody.innerHTML = html;
-  bindRowActions();
 }
 
 function renderMobileList(students) {
   const list = $('#mobileList');
-  if (!students.length) {
-    list.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无学生数据</div>`;
-    return;
-  }
+  if (!students.length) { list.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无学生数据</div>`; return; }
   let html = '';
-  students.forEach((s, idx) => {
+  students.forEach((s, i) => {
     const pending = getPendingCount(s);
-    const typeBadge = `<span class="badge ${typeBadgeClass(s.type)}"><i class="fas ${typeIcon(s.type)}"></i>${typeLabel(s.type)}</span>`;
-    const pendingBadge = pending > 0
-      ? `<span class="badge badge-pending"><i class="fas fa-clock"></i> ${pending} 待审</span>`
-      : '';
-    html += `<div class="student-card" style="animation-delay:${Math.min(idx * 25, 250)}ms">
-      <div class="student-card-header">
+    const typeTag = `<span class="tag ${s.type === 'boarding' ? 'tag-boarding' : 'tag-day'}">${typeLabel(s.type)}</span>`;
+    const statusTag = s.onLeave ? `<span class="tag tag-yellow"><i class="fas fa-clock"></i>在假中</span>` : `<span class="tag tag-green"><i class="fas fa-check"></i>未在假</span>`;
+    const pendingTag = pending > 0 ? `<span class="tag tag-blue"><i class="fas fa-hourglass-half"></i>${pending}</span>` : '';
+    html += `<div class="stu-card stagger-item" style="animation-delay:${Math.min(i*25, 300)}ms">
+      <div class="stu-card-head">
         <span class="avatar">${s.name.charAt(0)}</span>
-        <div class="student-card-info">
-          <div class="student-card-name">${s.name}</div>
-          <div class="student-card-tags">
-            <span class="badge badge-class">${s.class || '—'}</span>
-            ${typeBadge}
-            ${pendingBadge}
-          </div>
+        <div class="stu-card-info">
+          <div class="stu-card-name">${s.name}</div>
+          <div class="stu-card-tags"><span class="tag tag-gray">${s.class || '—'}</span>${typeTag}${statusTag}${pendingTag}</div>
         </div>
       </div>
-      <div class="student-card-body">
-        <div class="student-card-stats">
-          <span><strong>${s.leaveCount}</strong> 次请假</span>
-          <span>${s.lastLeave || '—'}</span>
-        </div>
-        <div class="student-card-actions">
-          <button class="icon-btn view-history" data-id="${s.id}" title="历史"><i class="fas fa-history"></i></button>
-          <button class="icon-btn quick-extend" data-id="${s.id}" title="续假"><i class="fas fa-clock"></i></button>
+      <div class="stu-card-body">
+        <div class="stu-card-stats"><span><strong>${s.leaveCount}</strong> 次请假</span><span>${s.lastLeave || '—'}</span></div>
+        <div class="stu-card-actions">
+          <button class="action-btn" data-action="view-history" data-id="${s.id}"><i class="fas fa-history"></i></button>
+          <button class="action-btn" data-action="quick-extend" data-id="${s.id}"><i class="fas fa-clock"></i></button>
+          <button class="action-btn" data-action="quick-return" data-id="${s.id}" ${!s.onLeave ? 'disabled' : ''}><i class="fas fa-right-to-bracket"></i></button>
         </div>
       </div>
     </div>`;
   });
   list.innerHTML = html;
-  bindRowActions();
 }
 
-function bindRowActions() {
-  $$('.quick-extend').forEach(btn => {
-    btn.addEventListener('click', async () => {
-      const id = btn.dataset.id;
-      const stu = allStudents.find(s => s.id === id);
-      if (!stu) return;
-      btn.disabled = true;
-      const old = btn.innerHTML;
-      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-      try {
-        await apiRequest('/leave', { method:'POST', body: JSON.stringify({ studentId:id, type:'extend', reason:'' }) });
-        showToast(`已为 ${stu.name} 提交续假，等待审核`);
-        await refreshAll(false);
-      } catch (e) { showToast(e.message, true); }
-      finally { btn.disabled = false; btn.innerHTML = old; }
-    });
-  });
-  $$('.view-history').forEach(btn => {
-    btn.addEventListener('click', () => openHistoryModal(btn.dataset.id));
-  });
-}
+document.addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const action = btn.dataset.action;
+  const id = btn.dataset.id;
+  if (!action || !id) return;
+  const stu = allStudents.find(s => s.id === id);
+  if (!stu) return;
+
+  if (action === 'view-history') { openHistoryModal(id); }
+  else if (action === 'quick-extend') {
+    if (btn.disabled) return;
+    if (!await customConfirm(`确定为 <b>${stu.name}</b> 提交续假申请？`, { title:'续假确认', okText:'确认续假' })) return;
+    btn.disabled = true;
+    try { await apiRequest('/leave', { method:'POST', body: JSON.stringify({ studentId:id, type:'extend', reason:'', expectedReturn:'' }) }); showToast('已提交续假'); await refreshAll(false); } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
+  } else if (action === 'quick-return') {
+    if (btn.disabled) return;
+    if (!await customConfirm(`确定为 <b>${stu.name}</b> 提交销假（已返校）？`, { title:'销假确认', okText:'确认销假' })) return;
+    btn.disabled = true;
+    try { await apiRequest('/leave', { method:'POST', body: JSON.stringify({ studentId:id, type:'return', reason:'已返校', expectedReturn:'' }) }); showToast('已提交销假'); await refreshAll(false); } catch (err) { showToast(err.message, true); } finally { btn.disabled = false; }
+  }
+});
 
 function populateSelect(students) {
   const sel = $('#studentSelect');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">— 请选择 —</option>';
-  students.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.id;
-    const pending = getPendingCount(s);
-    o.textContent = `${s.name}（${s.class} · ${typeLabel(s.type)} · 已通过${s.leaveCount}次${pending > 0 ? ` · 待审${pending}` : ''}）`;
-    sel.appendChild(o);
-  });
+  sel.innerHTML = '<option value="">请选择</option>';
+  students.forEach(s => { const o = document.createElement('option'); o.value = s.id; const pending = getPendingCount(s); const status = s.onLeave ? '在假中' : '未在假'; o.textContent = `${s.name}（${s.class} · ${typeLabel(s.type)} · ${status}${pending > 0 ? ` · 待审${pending}` : ''}）`; sel.appendChild(o); });
   if (cur && students.some(s => s.id === cur)) sel.value = cur;
-  if (sel._customSelect) sel._customSelect.refresh();
+  if (sel._cs) sel._cs.refresh();
+  const lsel = $('#lateStudentSelect');
+  const lcur = lsel.value;
+  lsel.innerHTML = '<option value="">请选择</option>';
+  students.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = `${s.name}（${s.class} · ${typeLabel(s.type)}）`; lsel.appendChild(o); });
+  if (lcur && students.some(s => s.id === lcur)) lsel.value = lcur;
+  if (lsel._cs) lsel._cs.refresh();
 }
 
 async function refreshAll(showMsg = true) {
@@ -946,202 +1045,307 @@ async function refreshAll(showMsg = true) {
     updateCounts();
     applyFilter();
     populateSelect(allStudents);
+    renderLateRecords();
     if (showMsg) showToast('数据已刷新');
-  } catch (e) {
-    showToast(`加载失败: ${e.message}`, true);
-  } finally {
-    isLoading = false;
-  }
+  } catch (e) { showToast(`加载失败: ${e.message}`, true); }
+  finally { isLoading = false; }
 }
 
-// ============ Modal 控制 ============
-function openApplyModal() {
-  $('#applyModal').classList.add('show');
-  setTimeout(() => {
-    const sel = $('#studentSelect');
-    if (sel._customSelect) sel._customSelect.open();
-  }, 200);
+function getStatusTag(status) {
+  if (status === 'approved') return '<span class="tag tag-green"><i class="fas fa-check"></i>已通过</span>';
+  if (status === 'rejected') return '<span class="tag tag-red"><i class="fas fa-times"></i>已驳回</span>';
+  return '<span class="tag tag-yellow"><i class="fas fa-clock"></i>待审核</span>';
 }
-function closeApplyModal() { $('#applyModal').classList.remove('show'); }
+function getArrivedTag(arrived) {
+  if (arrived === true) return '<span class="tag tag-green"><i class="fas fa-check-circle"></i>已到校</span>';
+  if (arrived === false) return '<span class="tag tag-red"><i class="fas fa-times-circle"></i>未到校</span>';
+  return '<span class="tag tag-gray"><i class="fas fa-question-circle"></i>待确认</span>';
+}
+
+function getAllLateRecords() {
+  const list = [];
+  allStudents.forEach(s => { (s.lateRecords || []).forEach(l => { list.push({ studentId: s.id, studentName: s.name, studentClass: s.class, studentType: s.type, lateId: l.id, date: l.date, time: l.time, reason: l.reason, status: l.status, recorder: l.recorder, arrived: l.arrived }); }); });
+  return list.sort((a, b) => { if (a.date !== b.date) return b.date.localeCompare(a.date); return (b.time || '').localeCompare(a.time || ''); });
+}
+
+function renderLateRecords() {
+  const all = getAllLateRecords();
+  const counts = { all: all.length, pending: 0, approved: 0, rejected: 0 };
+  all.forEach(r => { if (counts[r.status] !== undefined) counts[r.status]++; });
+  animateNumber($('#lateCountAll'), counts.all);
+  animateNumber($('#lateCountPending'), counts.pending);
+  animateNumber($('#lateCountApproved'), counts.approved);
+  animateNumber($('#lateCountRejected'), counts.rejected);
+  animateNumber($('#lateTotalCount'), counts.all);
+  animateNumber($('#lateTabCount'), counts.pending);
+
+  let filtered = all;
+  if (currentLateStatus !== 'all') filtered = filtered.filter(r => r.status === currentLateStatus);
+
+  const tbody = $('#lateTbody');
+  const mobileList = $('#lateMobileList');
+
+  if (!filtered.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty"><i class="fas fa-inbox"></i>暂无晚到记录</td></tr>`;
+    mobileList.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无晚到记录</div>`;
+    return;
+  }
+
+  let html = '';
+  filtered.forEach((r, i) => {
+    const typeTag = `<span class="tag ${r.studentType === 'boarding' ? 'tag-boarding' : 'tag-day'}">${typeLabel(r.studentType)}</span>`;
+    html += `<tr class="stagger-item" style="animation-delay:${Math.min(i*25, 300)}ms">
+      <td><div class="stu-cell"><span class="avatar avatar-orange">${r.studentName.charAt(0)}</span><div><div class="stu-name">${r.studentName}</div><div class="stu-meta">${r.studentClass || '—'} ${typeTag}</div></div></div></td>
+      <td style="font-size:12px; color:var(--text-secondary);">${r.date}</td>
+      <td style="font-size:12px; color:var(--text-secondary);">${r.time || '—'}</td>
+      <td style="font-size:12px; color:var(--text-secondary); max-width:200px; word-break:break-word;">${r.reason || '—'}</td>
+      <td>${getStatusTag(r.status)}</td>
+      <td>${getArrivedTag(r.arrived)}</td>
+      <td style="font-size:12px; color:var(--text-muted);">${r.recorder || '—'}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+
+  let mhtml = '';
+  filtered.forEach((r, i) => {
+    mhtml += `<div class="stu-card stagger-item" style="animation-delay:${Math.min(i*25, 300)}ms">
+      <div class="stu-card-head">
+        <span class="avatar avatar-orange">${r.studentName.charAt(0)}</span>
+        <div class="stu-card-info">
+          <div class="stu-card-name">${r.studentName}</div>
+          <div class="stu-card-tags"><span class="tag tag-gray">${r.studentClass || '—'}</span>${getStatusTag(r.status)}${getArrivedTag(r.arrived)}</div>
+        </div>
+      </div>
+      <div class="stu-card-body" style="flex-direction:column; align-items:stretch; gap:6px;">
+        <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--text-secondary);">
+          <span><i class="fas fa-calendar" style="margin-right:4px;"></i>${r.date}</span>
+          <span><i class="fas fa-clock" style="margin-right:4px;"></i>${r.time || '—'}</span>
+        </div>
+        <div style="font-size:12px; color:var(--text-secondary);">${r.reason || '—'}</div>
+        <div style="font-size:11px; color:var(--text-muted);">记录人：${r.recorder || '—'}</div>
+      </div>
+    </div>`;
+  });
+  mobileList.innerHTML = mhtml;
+}
+
+function openApplyModal() {
+  openModal('applyModal');
+  if ($('#leaveExpectedDate')._picker) { $('#leaveExpectedDate')._picker.value = ''; $('#leaveExpectedDate')._picker.updateInput(); }
+  if ($('#leaveExpectedTime')._picker) { $('#leaveExpectedTime')._picker.value = ''; $('#leaveExpectedTime')._picker.updateInput(); }
+  $('#leaveReason').value = '';
+}
+function closeApplyModal() { closeModal('applyModal'); }
+
+function openLateApplyModal() {
+  const today = new Date().toISOString().slice(0, 10);
+  if ($('#lateDate')._picker) $('#lateDate')._picker.setValue(today);
+  if ($('#lateTime')._picker) { $('#lateTime')._picker.value = ''; $('#lateTime')._picker.updateInput(); }
+  $('#lateReason').value = '';
+  openModal('lateApplyModal');
+}
+function closeLateApplyModal() { closeModal('lateApplyModal'); }
 
 async function openHistoryModal(studentId) {
   const stu = allStudents.find(s => s.id === studentId);
   if (!stu) return;
-  $('#historyTitle').textContent = `${stu.name} · ${typeLabel(stu.type)}生 · 请假历史`;
+  const status = stu.onLeave ? '在假中' : '未在假';
+  $('#historyTitle').textContent = `${stu.name} · ${typeLabel(stu.type)}生 · ${status}`;
   const body = $('#historyBody');
   body.innerHTML = '<div class="empty"><i class="fas fa-spinner fa-spin"></i>加载中...</div>';
-  $('#historyModal').classList.add('show');
+  openModal('historyModal');
   try {
     const res = await apiRequest(`/students/${studentId}/history`);
     const list = res.data;
-    if (!list.length) {
-      body.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无请假记录</div>`;
-      return;
-    }
+    if (!list.length) { body.innerHTML = `<div class="empty"><i class="fas fa-inbox"></i>暂无请假记录</div>`; return; }
     let html = '<div class="timeline">';
     list.forEach(h => {
-      const typeText = h.type === 'extend' ? '续假' : '新请假';
-      const dotClass = h.type === 'extend' ? 'extend' : 'new';
-      const dotIcon = h.type === 'extend' ? 'fa-clock' : 'fa-file-medical';
-      let statusBadge = '';
-      if (h.status === 'approved') statusBadge = '<span class="badge badge-approved"><i class="fas fa-check"></i> 已通过</span>';
-      else if (h.status === 'rejected') statusBadge = '<span class="badge badge-rejected"><i class="fas fa-times"></i> 已驳回</span>';
-      else statusBadge = '<span class="badge badge-pending"><i class="fas fa-clock"></i> 待审核</span>';
+      const extra = h.expectedReturn ? ` · 预计 ${h.expectedReturn} 到校` : '';
       html += `
-        <div class="history-item">
-          <div class="history-dot ${dotClass}"><i class="fas ${dotIcon}"></i></div>
-          <div class="history-content">
-            <div class="history-head">
-              <span class="history-date">${h.date}</span>
-              <span class="badge ${h.type === 'extend' ? 'badge-yellow' : 'badge-count'}">${typeText}</span>
-              ${statusBadge}
+        <div class="timeline-item">
+          <div class="timeline-dot ${recordTypeDot(h.type)}"><i class="fas ${recordTypeIcon(h.type)}"></i></div>
+          <div class="timeline-content">
+            <div class="timeline-head">
+              <span class="timeline-date">${h.date}</span>
+              <span class="tag ${recordTypeTag(h.type)}">${recordTypeLabel(h.type)}</span>
+              ${getStatusTag(h.status)}
             </div>
-            <div class="history-reason">${h.reason || '—'}</div>
+            <div class="timeline-reason">${h.reason || '—'}${extra}</div>
           </div>
         </div>`;
     });
     html += '</div>';
     body.innerHTML = html;
-  } catch (e) {
-    body.innerHTML = `<div class="empty"><i class="fas fa-exclamation-triangle"></i>${e.message}</div>`;
-  }
+  } catch (e) { body.innerHTML = `<div class="empty"><i class="fas fa-exclamation-triangle"></i>${e.message}</div>`; }
 }
-function closeHistoryModal() { $('#historyModal').classList.remove('show'); }
+function closeHistoryModal() { closeModal('historyModal'); }
 
-// ============ 提交请假 ============
 async function handleSubmit(e) {
   e.preventDefault();
   const studentId = $('#studentSelect').value;
   const type = $('#leaveType').value;
   const reason = $('#leaveReason').value.trim();
+  const expectedDate = $('#leaveExpectedDate').value.trim();
+  const expectedTime = $('#leaveExpectedTime').value.trim();
+  let expectedReturn = '';
+  if (expectedDate && expectedTime) expectedReturn = `${expectedDate} ${expectedTime}`;
+  else if (expectedDate) expectedReturn = expectedDate;
+  else if (expectedTime) expectedReturn = expectedTime;
   if (!studentId) return showToast('请先选择学生', true);
 
   const btn = $('#submitBtn');
   const old = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 提交中...';
+  btn.innerHTML = '<span class="dots-loading"><span></span><span></span><span></span></span> 提交中...';
   try {
-    await apiRequest('/leave', {
-      method:'POST',
-      body: JSON.stringify({ studentId, type, reason })
-    });
-    showToast('已提交，等待管理员审核');
+    await apiRequest('/leave', { method:'POST', body: JSON.stringify({ studentId, type, reason, expectedReturn }) });
+    showToast(`已提交${recordTypeLabel(type)}`);
     $('#leaveReason').value = '';
+    if ($('#leaveExpectedDate')._picker) { $('#leaveExpectedDate')._picker.value = ''; $('#leaveExpectedDate')._picker.updateInput(); }
+    if ($('#leaveExpectedTime')._picker) { $('#leaveExpectedTime')._picker.value = ''; $('#leaveExpectedTime')._picker.updateInput(); }
     closeApplyModal();
     await refreshAll(false);
   } catch (e) { showToast(e.message, true); }
   finally { btn.disabled = false; btn.innerHTML = old; }
 }
 
-// ============ 导出 ============
-async function exportAsImage() {
+async function handleLateSubmit(e) {
+  e.preventDefault();
+  const studentId = $('#lateStudentSelect').value;
+  const date = $('#lateDate').value;
+  const time = $('#lateTime').value;
+  const reason = $('#lateReason').value.trim();
+  if (!studentId) return showToast('请先选择学生', true);
+  if (!date) return showToast('请选择日期', true);
+
+  const btn = $('#lateSubmitBtn');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="dots-loading"><span></span><span></span><span></span></span> 提交中...';
+  try {
+    await apiRequest('/late', { method:'POST', body: JSON.stringify({ studentId, date, time, reason, recorder: '学生本人' }) });
+    showToast('已提交晚到申请');
+    closeLateApplyModal();
+    await refreshAll(false);
+  } catch (e) { showToast(e.message, true); }
+  finally { btn.disabled = false; btn.innerHTML = old; }
+}
+
+async function exportLeaveImage() {
   const btn = $('#exportBtn');
   const old = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>生成中...</span>';
-
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>生成中</span>';
   const target = $('#studentCard');
   const exportHeader = $('#exportHeader');
   const exportFooter = $('#exportFooter');
   const mobileList = $('#mobileList');
   const tableWrap = $('#tableWrap');
-
   try {
     const now = new Date();
     const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
     $('#exportTime').textContent = timeStr;
     exportHeader.style.display = 'block';
     exportFooter.style.display = 'block';
-
-    // 导出时强制显示表格，隐藏移动端卡片
-    const mobileDisplay = mobileList.style.display;
-    const tableDisplay = tableWrap.style.display;
+    const md = mobileList.style.display, td = tableWrap.style.display;
     mobileList.style.display = 'none';
     tableWrap.style.display = 'block';
-
     const actionCells = tableWrap.querySelectorAll('th:last-child, td:last-child');
-    const hiddenCells = [];
-    actionCells.forEach(cell => { hiddenCells.push({ el: cell, display: cell.style.display }); cell.style.display = 'none'; });
-
+    const hidden = [];
+    actionCells.forEach(c => { hidden.push({ el: c, d: c.style.display }); c.style.display = 'none'; });
     const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
-
-    hiddenCells.forEach(item => { item.el.style.display = item.display; });
+    hidden.forEach(item => { item.el.style.display = item.d; });
     exportHeader.style.display = 'none';
     exportFooter.style.display = 'none';
-    mobileList.style.display = mobileDisplay;
-    tableWrap.style.display = tableDisplay;
-
+    mobileList.style.display = md;
+    tableWrap.style.display = td;
     const link = document.createElement('a');
     link.download = `学生请假记录_${timeStr.replace(/[:\s]/g, '-')}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
     showToast('图片已导出');
-  } catch (e) {
-    console.error(e);
-    showToast('导出失败: ' + e.message, true);
+  } catch (e) { showToast('导出失败: ' + e.message, true); exportHeader.style.display = 'none'; exportFooter.style.display = 'none'; }
+  finally { btn.disabled = false; btn.innerHTML = old; }
+}
+
+async function exportLateImage() {
+  const btn = $('#exportBtn');
+  const old = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>生成中</span>';
+  const target = $('#lateCard');
+  const exportHeader = $('#lateExportHeader');
+  const exportFooter = $('#lateExportFooter');
+  const mobileList = $('#lateMobileList');
+  const tableWrap = $('#lateTableWrap');
+  try {
+    const now = new Date();
+    const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+    $('#lateExportTime').textContent = timeStr;
+    exportHeader.style.display = 'block';
+    exportFooter.style.display = 'block';
+    const md = mobileList.style.display, td = tableWrap.style.display;
+    mobileList.style.display = 'none';
+    tableWrap.style.display = 'block';
+    const canvas = await html2canvas(target, { backgroundColor: '#ffffff', scale: 2, useCORS: true, logging: false });
     exportHeader.style.display = 'none';
     exportFooter.style.display = 'none';
-  } finally {
-    btn.disabled = false;
-    btn.innerHTML = old;
-  }
+    mobileList.style.display = md;
+    tableWrap.style.display = td;
+    const link = document.createElement('a');
+    link.download = `学生晚到记录_${timeStr.replace(/[:\s]/g, '-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    showToast('图片已导出');
+  } catch (e) { showToast('导出失败: ' + e.message, true); exportHeader.style.display = 'none'; exportFooter.style.display = 'none'; }
+  finally { btn.disabled = false; btn.innerHTML = old; }
 }
 
 async function handleRefresh() {
   const btn = $('#refreshBtn');
-  if (btn.classList.contains('refreshing')) return;
-  btn.classList.add('refreshing');
-  btn.disabled = true;
-  try {
-    await refreshAll(false);
-    await checkConnection();
-    showToast('数据已刷新');
-  } finally {
-    setTimeout(() => {
-      btn.classList.remove('refreshing');
-      btn.disabled = false;
-    }, 600);
-  }
+  if (btn.classList.contains('loading')) return;
+  btn.classList.add('loading');
+  const icon = btn.querySelector('i');
+  if (icon) icon.classList.add('spin');
+  Loading.showProgress();
+  try { await refreshAll(false); await checkConnection(); showToast('数据已刷新'); }
+  finally { setTimeout(() => { btn.classList.remove('loading'); if (icon) icon.classList.remove('spin'); Loading.hideProgress(); }, 600); }
 }
 
-// ============ 初始化 ============
+function switchMainTab(tab) {
+  currentTab = tab;
+  $$('.main-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  const leaveTab = $('#leaveTab');
+  const lateTab = $('#lateTab');
+  if (tab === 'leave') { leaveTab.style.display = 'block'; lateTab.style.display = 'none'; leaveTab.style.animation = 'none'; void leaveTab.offsetWidth; leaveTab.style.animation = 'fadeInUp .3s cubic-bezier(.22,1,.36,1) both'; }
+  else { leaveTab.style.display = 'none'; lateTab.style.display = 'block'; lateTab.style.animation = 'none'; void lateTab.offsetWidth; lateTab.style.animation = 'fadeInUp .3s cubic-bezier(.22,1,.36,1) both'; }
+}
+
 async function init() {
   initCustomSelects();
+  document.querySelectorAll('[data-date-picker]').forEach(inp => { if (!inp._picker) inp._picker = new CustomDatePicker(inp); });
+  document.querySelectorAll('[data-time-picker]').forEach(inp => { if (!inp._picker) inp._picker = new CustomTimePicker(inp); });
+
   await checkConnection();
   await refreshAll(false);
 
+  $$('.main-tab').forEach(tab => { tab.addEventListener('click', () => switchMainTab(tab.dataset.tab)); });
+
   $('#openApplyBtn').addEventListener('click', openApplyModal);
   $('#leaveForm').addEventListener('submit', handleSubmit);
-  $('#exportBtn').addEventListener('click', exportAsImage);
+  $('#openLateApplyBtn').addEventListener('click', openLateApplyModal);
+  $('#lateForm').addEventListener('submit', handleLateSubmit);
+  $('#exportBtn').addEventListener('click', () => { currentTab === 'leave' ? exportLeaveImage() : exportLateImage(); });
   $('#refreshBtn').addEventListener('click', handleRefresh);
 
-  $$('#filterTabs .filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      $$('#filterTabs .filter-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentFilter = tab.dataset.filter;
-      applyFilter();
-    });
-  });
-  $$('#typeTabs .filter-tab').forEach(tab => {
-    tab.addEventListener('click', () => {
-      $$('#typeTabs .filter-tab').forEach(t => t.classList.remove('active'));
-      tab.classList.add('active');
-      currentType = tab.dataset.type;
-      applyFilter();
-    });
-  });
+  $$('#filterTabs .seg-btn').forEach(tab => { tab.addEventListener('click', () => { $$('#filterTabs .seg-btn').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentFilter = tab.dataset.filter; applyFilter(); }); });
+  $$('#typeTabs .seg-btn').forEach(tab => { tab.addEventListener('click', () => { $$('#typeTabs .seg-btn').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentType = tab.dataset.type; applyFilter(); }); });
+  $$('#lateStatusTabs .seg-btn').forEach(tab => { tab.addEventListener('click', () => { $$('#lateStatusTabs .seg-btn').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentLateStatus = tab.dataset.status; renderLateRecords(); }); });
 
-  // 关闭 modal（点空白）
-  $('#applyModal').addEventListener('click', e => {
-    if (e.target === $('#applyModal')) closeApplyModal();
-  });
-  $('#historyModal').addEventListener('click', e => {
-    if (e.target === $('#historyModal')) closeHistoryModal();
-  });
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { closeApplyModal(); closeHistoryModal(); }
-  });
+  $('#applyModal').addEventListener('click', e => { if (e.target === $('#applyModal')) closeApplyModal(); });
+  $('#lateApplyModal').addEventListener('click', e => { if (e.target === $('#lateApplyModal')) closeLateApplyModal(); });
+  $('#historyModal').addEventListener('click', e => { if (e.target === $('#historyModal')) closeHistoryModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeApplyModal(); closeLateApplyModal(); closeHistoryModal(); } });
 
   setInterval(checkConnection, 30000);
 }
